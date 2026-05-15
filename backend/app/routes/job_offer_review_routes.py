@@ -6,21 +6,19 @@ from ..database import get_db
 from ..models.job_offer_review import JobOfferReview
 from ..models.user import User
 from ..routes.auth_routes import get_current_user
+from ..security.permissions import get_current_candidate, get_current_admin, require_role
 from ..schemas.job_offer_review_schema import JobOfferReviewCreate, JobOfferReviewRead, JobOfferReviewUpdate
 
 router = APIRouter()
 
 
-@router.post("/", response_model=JobOfferReviewRead)
+@router.post("/", response_model=JobOfferReviewRead, dependencies=[Depends(get_current_candidate)])
 def create_review(
     review_data: JobOfferReviewCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Créer un avis sur une offre d'emploi"""
-    if current_user.role.name != "candidate":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Seuls les candidats peuvent laisser des avis")
-    
+    """Créer un avis sur une offre d'emploi (candidat uniquement)"""
     # Vérifier que le candidat a postulé à cette offre
     from ..models.application import Application
     application = db.query(Application).filter(
@@ -47,46 +45,36 @@ def create_review(
     return review
 
 
-@router.get("/admin", response_model=List[JobOfferReviewRead])
+@router.get("/admin", response_model=List[JobOfferReviewRead], dependencies=[Depends(get_current_admin)])
 def get_admin_reviews(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
 ):
-    """Lister tous les avis (admin)"""
-    if current_user.role.name != "admin":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accès refusé")
-    
+    """Lister tous les avis (admin uniquement)"""
     return db.query(JobOfferReview).all()
 
 
-@router.get("/admin/reports", response_model=List[JobOfferReviewRead])
+@router.get("/reports", response_model=List[JobOfferReviewRead], dependencies=[Depends(get_current_admin)])
 def get_reports(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
 ):
-    """Lister les signalements (admin)"""
-    if current_user.role.name != "admin":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accès refusé")
-    
+    """Lister les signalements (admin uniquement)"""
     return db.query(JobOfferReview).filter(JobOfferReview.is_report == True).all()
 
 
-@router.patch("/{review_id}", response_model=JobOfferReviewRead)
+@router.patch("/{review_id}", response_model=JobOfferReviewRead, dependencies=[Depends(require_role("candidate", "admin"))])
 def update_review(
     review_id: int,
     review_data: JobOfferReviewUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Mettre à jour un avis"""
+    """Mettre à jour un avis (candidat/admin)"""
     review = db.query(JobOfferReview).filter(JobOfferReview.id == review_id).first()
     if not review:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Avis non trouvé")
     
     # Vérifier les droits
     if current_user.role.name == "candidate" and review.candidate_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accès refusé")
-    if current_user.role.name not in ["candidate", "admin"]:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accès refusé")
     
     if review_data.rating is not None:

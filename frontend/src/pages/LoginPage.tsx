@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
-import { login, fetchCurrentUser } from "../features/auth/authSlice";
+import { loginUser, fetchCurrentUser } from "../features/auth/authSlice";
 import { Button, Card, Layout } from "../components";
 
 function LoginPage() {
@@ -12,9 +12,22 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
 
+  const getDashboardPath = (role: string | undefined) => {
+    switch (role) {
+      case "admin":
+        return "/admin/dashboard";
+      case "recruiter":
+        return "/recruiter/dashboard";
+      case "candidate":
+        return "/candidate/dashboard";
+      default:
+        return "/login";
+    }
+  };
+
   useEffect(() => {
     if (auth.token && auth.user) {
-      navigate("/dashboard");
+      navigate(getDashboardPath(auth.user.role_name));
     }
   }, [auth.token, auth.user, navigate]);
 
@@ -23,9 +36,9 @@ function LoginPage() {
     setError(null);
 
     try {
-      await dispatch(login({ email, password })).unwrap();
-      await dispatch(fetchCurrentUser()).unwrap();
-      navigate("/dashboard");
+      await dispatch(loginUser({ email, password })).unwrap();
+      const user = await dispatch(fetchCurrentUser()).unwrap();
+      navigate(getDashboardPath(user.role_name));
     } catch (err: any) {
       setError(err || "Impossible de se connecter");
     }

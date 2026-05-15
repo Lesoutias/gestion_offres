@@ -1,6 +1,8 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 
+from .user_schema import UserRead
+
 
 class Token(BaseModel):
     access_token: str
@@ -22,3 +24,9 @@ class RegisterRequest(BaseModel):
     password: str
     full_name: Optional[str] = None
     role_name: Optional[str] = "candidate"
+
+
+class AuthResponse(BaseModel):
+    access_token: str
+    token_type: str
+    user: UserRead

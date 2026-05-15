@@ -7,6 +7,31 @@ import { RoleBasedRoute } from "./components/auth/RoleBasedRoute";
 import { LoginPage } from "./pages/auth/LoginPage";
 import { RegisterPage } from "./pages/auth/RegisterPage";
 
+function DashboardRedirect(): JSX.Element {
+  const { user, isAuthenticated, isLoading } = useAppSelector((state) => state.auth);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  switch (user.role_name) {
+    case "admin":
+      return <Navigate to="/admin/dashboard" replace />;
+    case "recruiter":
+      return <Navigate to="/recruiter/dashboard" replace />;
+    default:
+      return <Navigate to="/candidate/dashboard" replace />;
+  }
+}
+
 // Candidate pages
 import { CandidateDashboardPage } from "./pages/candidate/CandidateDashboardPage";
 import { CandidateProfilePage } from "./pages/candidate/CandidateProfilePage";
@@ -55,7 +80,8 @@ function App(): JSX.Element {
     <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
       <Routes>
         {/* Public routes */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/dashboard" element={<DashboardRedirect />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
 
@@ -256,7 +282,7 @@ function App(): JSX.Element {
         />
 
         {/* Catch all */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </div>
   );

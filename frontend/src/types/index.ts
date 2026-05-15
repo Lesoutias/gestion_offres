@@ -3,7 +3,7 @@ export * from "./role";
 export * from "./company";
 export * from "./jobOffer";
 export * from "./application";
-export * from "./document";
+export type { DocumentCreate, DocumentResponse } from "./document";
 export * from "./review";
 export * from "./admin";
 export * from "./error";

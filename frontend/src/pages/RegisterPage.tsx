@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAppDispatch } from "../app/hooks";
-import { register } from "../features/auth/authSlice";
+import { registerUser } from "../features/auth/authSlice";
 import { Button, Card, Layout } from "../components";
 
 function RegisterPage() {
@@ -20,9 +20,14 @@ function RegisterPage() {
 
     try {
       await dispatch(
-        register({ email, password, full_name: fullName }),
+        registerUser({
+          email,
+          password,
+          full_name: fullName,
+          role_name: "candidate",
+        }),
       ).unwrap();
-      setSuccess("Inscription réussie. Vous pouvez maintenant vous connecter.");
+      setSuccess("Inscription réussie. Votre compte est en attente de validation par un administrateur.");
       setEmail("");
       setPassword("");
       setFullName("");

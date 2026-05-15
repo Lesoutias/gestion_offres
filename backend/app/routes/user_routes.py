@@ -6,6 +6,7 @@ from ..database import get_db
 from ..models.user import User
 from ..schemas.user_schema import UserRead
 from ..routes.auth_routes import get_current_user
+from ..security.permissions import get_current_admin
 
 router = APIRouter()
 
@@ -21,10 +22,9 @@ def read_current_user(current_user: User = Depends(get_current_user)):
     )
 
 
-@router.get("/", response_model=List[UserRead])
-def list_users(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    if current_user.role.name != "admin":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accès restreint")
+@router.get("/", response_model=List[UserRead], dependencies=[Depends(get_current_admin)])
+def list_users(db: Session = Depends(get_db)):
+    """Lister tous les utilisateurs (admin uniquement)"""
     users = db.query(User).all()
     return [
         UserRead(

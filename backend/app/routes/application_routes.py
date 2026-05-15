@@ -29,20 +29,23 @@ from ..services.email_service import EmailService
 from ..services.file_service import FileService
 from ..models.user import User
 from ..routes.auth_routes import get_current_user
+from ..security.permissions import (
+    get_current_admin,
+    get_current_recruiter,
+    get_current_candidate,
+    require_role,
+)
 
 router = APIRouter()
 
 
-@router.post("/", response_model=ApplicationRead)
+@router.post("/", response_model=ApplicationRead, dependencies=[Depends(get_current_candidate)])
 def apply_to_offer(
     application_data: ApplicationCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Postuler à une offre d'emploi"""
-    if current_user.role.name != "candidate":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Seuls les candidats peuvent postuler")
-
+    """Postuler à une offre d'emploi (candidat uniquement)"""
     offer = db.query(JobOffer).filter(
         JobOffer.id == application_data.job_offer_id,
         JobOffer.status == "published",
@@ -67,36 +70,29 @@ def apply_to_offer(
     return create_application(db, application_data, candidate_id=current_user.id)
 
 
-@router.get("/me", response_model=List[ApplicationRead])
+@router.get("/me", response_model=List[ApplicationRead], dependencies=[Depends(get_current_candidate)])
 def my_applications(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Lister mes candidatures"""
-    if current_user.role.name != "candidate":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accès refusé")
+    """Lister mes candidatures (candidat uniquement)"""
     return list_candidate_applications(db, current_user.id)
 
 
-@router.get("/recruiter", response_model=List[ApplicationRecruiterRead])
+@router.get("/recruiter", response_model=List[ApplicationRecruiterRead], dependencies=[Depends(get_current_recruiter)])
 def recruiter_applications(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Lister les candidatures du recruteur"""
-    if current_user.role.name != "recruiter":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accès refusé")
+    """Lister les candidatures du recruteur (recruteur/admin)"""
     return list_recruiter_applications(db, current_user.id)
 
 
-@router.get("/admin", response_model=List[ApplicationRecruiterRead])
+@router.get("/admin", response_model=List[ApplicationRecruiterRead], dependencies=[Depends(get_current_admin)])
 def admin_applications(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
 ):
-    """Lister toutes les candidatures (admin)"""
-    if current_user.role.name != "admin":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accès refusé")
+    """Lister toutes les candidatures (admin uniquement)"""
     return list_all_applications(db)
 
 
@@ -122,17 +118,14 @@ def get_application_detail(
     return application
 
 
-@router.patch("/{application_id}/status", response_model=ApplicationRead)
+@router.patch("/{application_id}/status", response_model=ApplicationRead, dependencies=[Depends(require_role("recruiter", "admin"))])
 def update_app_status(
     application_id: int,
     update: ApplicationUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Mettre à jour le statut d'une candidature"""
-    if current_user.role.name not in ["recruiter", "admin"]:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accès refusé")
-
+    """Mettre à jour le statut d'une candidature (recruteur/admin)"""
     recruiter_id = None if current_user.role.name == "admin" else current_user.id
     application = update_application_status(db, application_id, update.status, recruiter_id)
     if not application:
@@ -141,7 +134,7 @@ def update_app_status(
     return application
 
 
-@router.post("/{application_id}/documents", response_model=ApplicationDocumentRead)
+@router.post("/{application_id}/documents", response_model=ApplicationDocumentRead, dependencies=[Depends(get_current_candidate)])
 async def upload_document(
     application_id: int,
     document_type: str,
@@ -149,7 +142,7 @@ async def upload_document(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Ajouter un document à une candidature"""
+    """Ajouter un document à une candidature (candidat uniquement)"""
     application = get_application(db, application_id)
     if not application:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Candidature non trouvée")

@@ -50,7 +50,7 @@ export function RegisterPage(): JSX.Element {
     }
 
     try {
-      const result = await dispatch(
+      await dispatch(
         registerUser({
           email: formData.email,
           full_name: formData.full_name,
@@ -59,15 +59,7 @@ export function RegisterPage(): JSX.Element {
         }),
       ).unwrap();
 
-      if (result) {
-        // Redirection selon le rôle
-        const roleRoutes: Record<UserRole, string> = {
-          candidate: "/candidate/dashboard",
-          recruiter: "/recruiter/dashboard",
-          admin: "/admin/dashboard",
-        };
-        navigate(roleRoutes[formData.role_name]);
-      }
+      navigate("/dashboard");
     } catch (err) {
       setFormError(error || "Erreur d'inscription");
     }

@@ -8,19 +8,16 @@ from ..models.application import Application
 from ..models.user import User
 from ..models.job_offer_review import JobOfferReview
 from ..routes.auth_routes import get_current_user
+from ..security.permissions import get_current_admin
 
 router = APIRouter()
 
 
-@router.get("/stats")
+@router.get("/stats", dependencies=[Depends(get_current_admin)])
 def get_admin_stats(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
 ):
-    """Obtenir les statistiques du système (admin)"""
-    if current_user.role.name != "admin":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accès refusé")
-    
+    """Obtenir les statistiques du système (admin uniquement)"""
     # Statistiques des offres
     total_offers = db.query(func.count(JobOffer.id)).scalar()
     published_offers = db.query(func.count(JobOffer.id)).filter(JobOffer.status == "published").scalar()

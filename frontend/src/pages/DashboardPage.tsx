@@ -35,6 +35,10 @@ function DashboardPage() {
     0,
   );
 
+  const showCreateOfferButton = ["admin", "recruiter"].includes(
+    auth.user?.role_name ?? "",
+  );
+
   if (auth.user?.role_name === "admin") {
     return (
       <AdminLayout title="Tableau de bord" active="dashboard">
@@ -155,7 +159,7 @@ function DashboardPage() {
         <Link to="/recruiter-applications">
           <Button className="w-full">Candidatures recruteur</Button>
         </Link>
-        {(auth.user?.role_name === "admin" || auth.user?.role_name === "recruiter") && (
+        {showCreateOfferButton && (
           <Link to="/job-offers/new">
             <Button className="w-full">Créer une offre</Button>
           </Link>

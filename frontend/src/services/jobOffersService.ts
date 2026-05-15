@@ -74,3 +74,14 @@ export const publishJobOffer = async (offerId: number) => {
   );
   return response.data;
 };
+
+export const rejectJobOffer = async (offerId: number) => {
+  const response = await api.patch<JobOffer>(
+    `/job-offers/${offerId}/reject`,
+    null,
+    {
+      headers: authHeader(),
+    },
+  );
+  return response.data;
+};

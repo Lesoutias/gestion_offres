@@ -122,5 +122,10 @@ class ApiClient {
 }
 
 export const apiClient = new ApiClient();
+export const api = apiClient;
+export const authHeader = () => {
+  const token = apiClient.getToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
 
 export default apiClient;

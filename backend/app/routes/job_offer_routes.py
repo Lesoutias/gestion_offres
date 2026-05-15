@@ -17,20 +17,22 @@ from ..services.job_offer_service import (
 )
 from ..models.user import User
 from ..routes.auth_routes import get_current_user
+from ..security.permissions import (
+    get_current_admin,
+    get_current_recruiter,
+    require_role,
+)
 
 router = APIRouter()
 
 
-@router.post("/", response_model=JobOfferRead)
+@router.post("/", response_model=JobOfferRead, dependencies=[Depends(require_role("recruiter", "admin"))])
 def create_offer(
     job_offer: JobOfferCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Créer une nouvelle offre d'emploi"""
-    if current_user.role.name not in ["recruiter", "admin"]:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accès refusé")
-
+    """Créer une nouvelle offre d'emploi (recruteur/admin)"""
     status_offer = "published" if current_user.role.name == "admin" else "pending"
     return create_job_offer(
         db,
@@ -46,40 +48,30 @@ def get_offers(db: Session = Depends(get_db)):
     return list_job_offers(db)
 
 
-@router.get("/admin/pending", response_model=List[JobOfferAdminRead])
+@router.get("/admin/pending", response_model=List[JobOfferAdminRead], dependencies=[Depends(get_current_admin)])
 def get_pending_offers(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
 ):
-    """Lister les offres en attente de validation (admin)"""
-    if current_user.role.name != "admin":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accès refusé")
-    
-    offers = db.query(JobOfferAdminRead).filter(JobOfferAdminRead.status == "pending").all()
-    return offers
+    """Lister les offres en attente de validation (admin uniquement)"""
+    from ..models.job_offer import JobOffer
+    return db.query(JobOffer).filter(JobOffer.status == "pending").all()
 
 
-@router.get("/recruiter/me", response_model=List[JobOfferRead])
+@router.get("/recruiter/me", response_model=List[JobOfferRead], dependencies=[Depends(get_current_recruiter)])
 def get_recruiter_offers(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Lister les offres du recruteur connecté"""
-    if current_user.role.name != "recruiter":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accès refusé")
-    
+    """Lister les offres du recruteur connecté (recruteur/admin)"""
     from ..models.job_offer import JobOffer
     return db.query(JobOffer).filter(JobOffer.recruiter_id == current_user.id).all()
 
 
-@router.get("/admin/all", response_model=List[JobOfferAdminRead])
+@router.get("/admin/all", response_model=List[JobOfferAdminRead], dependencies=[Depends(get_current_admin)])
 def get_admin_all_offers(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
 ):
-    """Lister toutes les offres (admin)"""
-    if current_user.role.name != "admin":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accès refusé")
+    """Lister toutes les offres (admin uniquement)"""
     return list_all_job_offers(db)
 
 
@@ -112,45 +104,37 @@ def update_offer(
     return update_job_offer(db, offer_id, offer_data)
 
 
-@router.patch("/{offer_id}/publish", response_model=JobOfferRead)
+@router.patch("/{offer_id}/publish", response_model=JobOfferRead, dependencies=[Depends(get_current_admin)])
 def publish_offer(
     offer_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
 ):
-    """Publier une offre (admin)"""
-    if current_user.role.name != "admin":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accès refusé")
-
+    """Publier une offre (admin uniquement)"""
     offer = publish_job_offer(db, offer_id)
     if not offer:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Offre non trouvée")
     return offer
 
 
-@router.patch("/{offer_id}/reject", response_model=JobOfferRead)
+@router.patch("/{offer_id}/reject", response_model=JobOfferRead, dependencies=[Depends(get_current_admin)])
 def reject_offer(
     offer_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
 ):
-    """Rejeter une offre (admin)"""
-    if current_user.role.name != "admin":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accès refusé")
-
+    """Rejeter une offre (admin uniquement)"""
     offer = reject_job_offer(db, offer_id)
     if not offer:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Offre non trouvée")
     return offer
 
 
-@router.patch("/{offer_id}/close", response_model=JobOfferRead)
+@router.patch("/{offer_id}/close", response_model=JobOfferRead, dependencies=[Depends(require_role("recruiter", "admin"))])
 def close_offer(
     offer_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Fermer une offre"""
+    """Fermer une offre (recruteur/admin)"""
     from ..models.job_offer import JobOffer
     offer = db.query(JobOffer).filter(JobOffer.id == offer_id).first()
     if not offer:
@@ -158,8 +142,6 @@ def close_offer(
     
     # Vérifier les droits
     if current_user.role.name == "recruiter" and offer.recruiter_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accès refusé")
-    if current_user.role.name not in ["recruiter", "admin"]:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accès refusé")
 
     offer = close_job_offer(db, offer_id)
@@ -168,13 +150,13 @@ def close_offer(
     return offer
 
 
-@router.delete("/{offer_id}")
+@router.delete("/{offer_id}", dependencies=[Depends(require_role("recruiter", "admin"))])
 def delete_offer(
     offer_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Supprimer une offre"""
+    """Supprimer une offre (recruteur/admin)"""
     from ..models.job_offer import JobOffer
     offer = db.query(JobOffer).filter(JobOffer.id == offer_id).first()
     if not offer:
@@ -182,8 +164,6 @@ def delete_offer(
     
     # Vérifier les droits
     if current_user.role.name == "recruiter" and offer.recruiter_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accès refusé")
-    if current_user.role.name not in ["recruiter", "admin"]:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accès refusé")
 
     if delete_job_offer(db, offer_id):

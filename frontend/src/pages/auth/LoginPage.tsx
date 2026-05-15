@@ -33,22 +33,14 @@ export function LoginPage(): JSX.Element {
     }
 
     try {
-      const result = await dispatch(
+      await dispatch(
         loginUser({
           email: formData.email,
           password: formData.password,
         }),
       ).unwrap();
 
-      if (result) {
-        // Redirection selon le rôle
-        const roleRoutes: Record<string, string> = {
-          candidate: "/candidate/dashboard",
-          recruiter: "/recruiter/dashboard",
-          admin: "/admin/dashboard",
-        };
-        navigate(roleRoutes[result.user.role_name] || "/");
-      }
+      navigate("/dashboard");
     } catch (err) {
       setFormError(error || "Erreur de connexion");
     }

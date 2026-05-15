@@ -5,6 +5,7 @@ import {
   reviewApplication,
   type Application,
 } from "../features/applications/applicationSlice";
+import type { ApplicationStatus } from "../types";
 import { Card, Layout } from "../components";
 
 function RecruiterApplicationsPage() {
@@ -19,7 +20,10 @@ function RecruiterApplicationsPage() {
     dispatch(fetchRecruiterApplications());
   }, [dispatch]);
 
-  const handleReview = async (applicationId: number, status: string) => {
+  const handleReview = async (
+    applicationId: number,
+    status: ApplicationStatus,
+  ) => {
     setMessage(null);
     setActionError(null);
 
@@ -75,7 +79,7 @@ function RecruiterApplicationsPage() {
                   <button
                     type="button"
                     className="inline-flex items-center justify-center rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
-                    onClick={() => handleReview(application.id, "approved")}
+                    onClick={() => handleReview(application.id, "accepted")}
                   >
                     Valider
                   </button>

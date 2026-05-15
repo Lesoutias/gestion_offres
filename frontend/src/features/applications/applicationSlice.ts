@@ -1,19 +1,13 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
-import * as applicationService from "../../services/applicationService";
+import applicationService from "../../services/applicationService";
+import {
+  Application as ApplicationBase,
+  ApplicationCreate,
+  ApplicationStatusUpdate,
+  ApplicationWithDetails,
+} from "../../types";
 
-export type Application = {
-  id: number;
-  job_offer_id: number;
-  candidate_id: number;
-  cover_letter?: string | null;
-  status: string;
-  resume_url?: string | null;
-  created_at: string;
-  candidate_full_name?: string | null;
-  candidate_email?: string | null;
-  job_offer_title?: string | null;
-  job_offer_location?: string | null;
-};
+export type Application = ApplicationBase | ApplicationWithDetails;
 
 type ApplicationsState = {
   items: Application[];
@@ -28,7 +22,7 @@ const initialState: ApplicationsState = {
 };
 
 export const fetchMyApplications = createAsyncThunk<
-  applicationService.Application[],
+  ApplicationWithDetails[],
   void,
   { rejectValue: string }
 >("applications/fetchMyApplications", async (_, thunkApi) => {
@@ -42,7 +36,7 @@ export const fetchMyApplications = createAsyncThunk<
 });
 
 export const fetchRecruiterApplications = createAsyncThunk<
-  applicationService.Application[],
+  ApplicationWithDetails[],
   void,
   { rejectValue: string }
 >("applications/fetchRecruiterApplications", async (_, thunkApi) => {
@@ -57,8 +51,8 @@ export const fetchRecruiterApplications = createAsyncThunk<
 });
 
 export const applyToOffer = createAsyncThunk<
-  applicationService.Application,
-  applicationService.ApplicationCreatePayload,
+  Application,
+  ApplicationCreate,
   { rejectValue: string }
 >("applications/applyToOffer", async (payload, thunkApi) => {
   try {
@@ -71,12 +65,15 @@ export const applyToOffer = createAsyncThunk<
 });
 
 export const reviewApplication = createAsyncThunk<
-  applicationService.Application,
-  applicationService.ApplicationReviewPayload,
+  Application,
+  { applicationId: number; status: ApplicationStatusUpdate["status"] },
   { rejectValue: string }
 >("applications/reviewApplication", async (payload, thunkApi) => {
   try {
-    return await applicationService.reviewApplication(payload);
+    return await applicationService.reviewApplication(
+      payload.applicationId,
+      payload.status,
+    );
   } catch (error: any) {
     return thunkApi.rejectWithValue(
       error?.response?.data?.detail ||

@@ -13,27 +13,27 @@ def authenticate_user(db: Session, email: str, password: str):
     user = db.query(User).filter(User.email == email).first()
     if not user or not verify_password(password, user.hashed_password):
         return None
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Utilisateur inactif. Contactez l'administrateur.",
+        )
     return user
 
 
-def create_user(db: Session, user_data: UserCreate):
-    role = db.query(Role).filter(Role.name == user_data.role_name).first()
-    if not role:
-        role = Role(name=user_data.role_name, description=f"Rôle {user_data.role_name}")
-        db.add(role)
-        db.commit()
-        db.refresh(role)
-
-    db_user = User(
+def create_user(db: Session, user_data: UserCreate) -> User:
+    hashed_password = hash_password(user_data.password)
+    user = User(
         email=user_data.email,
         full_name=user_data.full_name,
-        hashed_password=hash_password(user_data.password),
-        role_id=role.id,
+        hashed_password=hashed_password,
+        is_active=user_data.is_active,  # Allow setting is_active
+        role_id=user_data.role_id,
     )
-    db.add(db_user)
+    db.add(user)
     db.commit()
-    db.refresh(db_user)
-    return db_user
+    db.refresh(user)
+    return user
 
 
 def create_tokens(user: User):

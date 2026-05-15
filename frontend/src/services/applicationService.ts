@@ -60,6 +60,17 @@ class ApplicationService {
     }
   }
 
+  async applyToOffer(data: ApplicationCreate): Promise<Application> {
+    return this.createApplication(data);
+  }
+
+  async reviewApplication(
+    applicationId: number,
+    status: ApplicationStatusUpdate["status"],
+  ): Promise<Application> {
+    return this.updateApplicationStatus(applicationId, { status });
+  }
+
   async listRecruiterApplications(): Promise<ApplicationWithDetails[]> {
     try {
       const response = await apiClient.get<ApplicationWithDetails[]>(

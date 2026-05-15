@@ -17,9 +17,15 @@ export interface Application {
   id: number;
   job_offer_id: number;
   candidate_id: number;
+  cover_letter?: string | null;
+  resume_url?: string | null;
   status: ApplicationStatus;
   created_at: string;
   updated_at: string;
+  candidate_full_name?: string | null;
+  candidate_email?: string | null;
+  job_offer_title?: string | null;
+  job_offer_location?: string | null;
 }
 
 export interface ApplicationWithDetails extends Application {
@@ -41,6 +47,8 @@ export interface ApplicationWithDetails extends Application {
 
 export interface ApplicationCreate {
   job_offer_id: number;
+  cover_letter?: string | null;
+  resume_url?: string | null;
 }
 
 export interface ApplicationStatusUpdate {
