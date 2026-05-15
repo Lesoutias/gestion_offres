@@ -1,58 +1,87 @@
-import { api, authHeader } from "./api";
+import { apiClient } from "./api";
+import {
+  Application,
+  ApplicationCreate,
+  ApplicationStatusUpdate,
+  ApplicationWithDetails,
+} from "../types";
 
-export type Application = {
-  id: number;
-  job_offer_id: number;
-  candidate_id: number;
-  cover_letter?: string | null;
-  status: string;
-  resume_url?: string | null;
-  created_at: string;
-  candidate_full_name?: string | null;
-  candidate_email?: string | null;
-  job_offer_title?: string | null;
-  job_offer_location?: string | null;
-};
+class ApplicationService {
+  async createApplication(data: ApplicationCreate): Promise<Application> {
+    try {
+      const response = await apiClient.post<Application>("/applications", data);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
 
-export type ApplicationCreatePayload = {
-  job_offer_id: number;
-  cover_letter?: string;
-  resume_url?: string;
-};
+  async listMyApplications(): Promise<ApplicationWithDetails[]> {
+    try {
+      const response =
+        await apiClient.get<ApplicationWithDetails[]>("/applications/me");
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
 
-export type ApplicationReviewPayload = {
-  applicationId: number;
-  status: string;
-};
+  async getApplicationById(id: number): Promise<ApplicationWithDetails> {
+    try {
+      const response = await apiClient.get<ApplicationWithDetails>(
+        `/applications/${id}`,
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
 
-export const listMyApplications = async () => {
-  const response = await api.get<Application[]>("/applications/me", {
-    headers: authHeader(),
-  });
-  return response.data;
-};
+  async updateApplicationStatus(
+    id: number,
+    data: ApplicationStatusUpdate,
+  ): Promise<Application> {
+    try {
+      const response = await apiClient.patch<Application>(
+        `/applications/${id}/status`,
+        data,
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
 
-export const listRecruiterApplications = async () => {
-  const response = await api.get<Application[]>("/applications/recruiter", {
-    headers: authHeader(),
-  });
-  return response.data;
-};
+  async inviteCandidate(id: number): Promise<void> {
+    try {
+      await apiClient.post(`/applications/${id}/invite`);
+    } catch (error) {
+      throw error;
+    }
+  }
 
-export const applyToOffer = async (payload: ApplicationCreatePayload) => {
-  const response = await api.post<Application>("/applications", payload, {
-    headers: authHeader(),
-  });
-  return response.data;
-};
+  async listRecruiterApplications(): Promise<ApplicationWithDetails[]> {
+    try {
+      const response = await apiClient.get<ApplicationWithDetails[]>(
+        "/applications/recruiter",
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
 
-export const reviewApplication = async (payload: ApplicationReviewPayload) => {
-  const response = await api.patch<Application>(
-    `/applications/${payload.applicationId}`,
-    { status: payload.status },
-    {
-      headers: authHeader(),
-    },
-  );
-  return response.data;
-};
+  async listAllApplications(): Promise<ApplicationWithDetails[]> {
+    try {
+      const response = await apiClient.get<ApplicationWithDetails[]>(
+        "/applications/admin",
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+}
+
+export const applicationService = new ApplicationService();
+export default applicationService;

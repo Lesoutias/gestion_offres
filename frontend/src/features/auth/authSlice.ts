@@ -28,9 +28,7 @@ export const loginUser = createAsyncThunk<
     const result = await authService.login(credentials);
     return result;
   } catch (error: any) {
-    return rejectWithValue(
-      error?.message || "Erreur lors de la connexion"
-    );
+    return rejectWithValue(error?.message || "Erreur lors de la connexion");
   }
 });
 
@@ -43,9 +41,7 @@ export const registerUser = createAsyncThunk<
     const result = await authService.register(data);
     return result;
   } catch (error: any) {
-    return rejectWithValue(
-      error?.message || "Erreur lors de l'inscription"
-    );
+    return rejectWithValue(error?.message || "Erreur lors de l'inscription");
   }
 });
 
@@ -62,7 +58,7 @@ export const fetchCurrentUser = createAsyncThunk<
     return user;
   } catch (error: any) {
     return rejectWithValue(
-      error?.message || "Impossible de récupérer l'utilisateur"
+      error?.message || "Impossible de récupérer l'utilisateur",
     );
   }
 });
@@ -141,39 +137,4 @@ const authSlice = createSlice({
 });
 
 export const { logout, clearError } = authSlice.actions;
-export default authSlice.reducer;
-      .addCase(login.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.payload || "Échec de la connexion";
-      })
-      .addCase(register.pending, (state) => {
-        state.status = "loading";
-        state.error = null;
-      })
-      .addCase(register.fulfilled, (state, action) => {
-        state.user = action.payload;
-        state.status = "succeeded";
-        localStorage.setItem("authUser", JSON.stringify(action.payload));
-      })
-      .addCase(register.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.payload || "Échec de l'inscription";
-      })
-      .addCase(fetchCurrentUser.pending, (state) => {
-        state.status = "loading";
-        state.error = null;
-      })
-      .addCase(fetchCurrentUser.fulfilled, (state, action) => {
-        state.user = action.payload;
-        state.status = "succeeded";
-        localStorage.setItem("authUser", JSON.stringify(action.payload));
-      })
-      .addCase(fetchCurrentUser.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.payload || "Échec de récupération du profil";
-      });
-  },
-});
-
-export const { logout, setUser } = authSlice.actions;
 export default authSlice.reducer;
