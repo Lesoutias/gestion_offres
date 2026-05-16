@@ -38,4 +38,23 @@ api.interceptors.response.use(
   },
 );
 
+<<<<<<< HEAD
 export const unwrap = <T>(request: Promise<{ data: T }>) => request.then((response) => response.data);
+=======
+    return this.client.post<T>(url, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  }
+}
+
+export const apiClient = new ApiClient();
+export const api = apiClient;
+export const authHeader = () => {
+  const token = apiClient.getToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
+export default apiClient;
+>>>>>>> 225b83bb86ef1ee73f1852449d2e0cf0729e6585

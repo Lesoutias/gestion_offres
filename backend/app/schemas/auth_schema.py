@@ -1,8 +1,7 @@
 from typing import Literal, Optional
 
 from pydantic import BaseModel, EmailStr
-
-UserRole = Literal["admin", "autorite_publique", "entreprise", "commission_evaluation"]
+from typing import Optional
 
 
 class Token(BaseModel):
@@ -43,4 +42,4 @@ class AdminUserCreateRequest(BaseModel):
     email: EmailStr
     password: str
     full_name: Optional[str] = None
-    role_name: UserRole
+    role_name: Optional[str] = "candidate"
