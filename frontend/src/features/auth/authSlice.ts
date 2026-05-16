@@ -1,140 +1,82 @@
-import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { authService } from "../../services/authService";
-import { User, LoginRequest, RegisterRequest } from "../../types";
-
-export interface AuthState {
-  user: User | null;
-  token: string | null;
-  isLoading: boolean;
-  isAuthenticated: boolean;
-  error: string | null;
-}
+import { tokenStorage } from "../../services/api";
+import type { AuthState, LoginRequest, RegisterCompanyRequest } from "../../types";
 
 const initialState: AuthState = {
   user: null,
-  token: authService.getToken(),
-  isLoading: false,
-  isAuthenticated: authService.isAuthenticated(),
+  token: tokenStorage.get(),
+  loading: false,
   error: null,
 };
 
-// Async thunks
-export const loginUser = createAsyncThunk<
-  { user: User; token: string },
-  LoginRequest,
-  { rejectValue: string }
->("auth/login", async (credentials, { rejectWithValue }) => {
-  try {
-    const result = await authService.login(credentials);
-    return result;
-  } catch (error: any) {
-    return rejectWithValue(error?.message || "Erreur lors de la connexion");
-  }
+export const login = createAsyncThunk("auth/login", async (payload: LoginRequest) => {
+  await authService.login(payload);
+  return authService.getCurrentUser();
 });
 
-export const registerUser = createAsyncThunk<
-  { user: User; token: string },
-  RegisterRequest,
-  { rejectValue: string }
->("auth/register", async (data, { rejectWithValue }) => {
-  try {
-    const result = await authService.register(data);
-    return result;
-  } catch (error: any) {
-    return rejectWithValue(error?.message || "Erreur lors de l'inscription");
-  }
+export const registerCompany = createAsyncThunk("auth/registerCompany", async (payload: RegisterCompanyRequest) => {
+  await authService.registerCompany(payload);
 });
 
-export const fetchCurrentUser = createAsyncThunk<
-  User,
-  void,
-  { rejectValue: string }
->("auth/fetchCurrentUser", async (_, { rejectWithValue }) => {
-  try {
-    if (!authService.isAuthenticated()) {
-      return rejectWithValue("Non authentifié");
-    }
-    const user = await authService.getCurrentUser();
-    return user;
-  } catch (error: any) {
-    return rejectWithValue(
-      error?.message || "Impossible de récupérer l'utilisateur",
-    );
-  }
-});
+export const loadCurrentUser = createAsyncThunk("auth/me", async () => authService.getCurrentUser());
 
 const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    logout: (state) => {
+    logout(state) {
+      authService.logout();
       state.user = null;
       state.token = null;
-      state.isAuthenticated = false;
       state.error = null;
-      authService.logout();
     },
-    clearError: (state) => {
+    clearAuthError(state) {
       state.error = null;
     },
   },
   extraReducers: (builder) => {
-    // Login
     builder
-      .addCase(loginUser.pending, (state) => {
-        state.isLoading = true;
+      .addCase(login.pending, (state) => {
+        state.loading = true;
         state.error = null;
       })
-      .addCase(loginUser.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
-        state.isAuthenticated = true;
-        state.error = null;
-      })
-      .addCase(loginUser.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload || "Erreur de connexion";
-        state.isAuthenticated = false;
-      });
-
-    // Register
-    builder
-      .addCase(registerUser.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(registerUser.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
-        state.isAuthenticated = true;
-        state.error = null;
-      })
-      .addCase(registerUser.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload || "Erreur d'inscription";
-        state.isAuthenticated = false;
-      });
-
-    // Fetch current user
-    builder
-      .addCase(fetchCurrentUser.pending, (state) => {
-        state.isLoading = true;
-      })
-      .addCase(fetchCurrentUser.fulfilled, (state, action) => {
-        state.isLoading = false;
+      .addCase(login.fulfilled, (state, action) => {
+        state.loading = false;
         state.user = action.payload;
-        state.isAuthenticated = true;
+        state.token = tokenStorage.get();
       })
-      .addCase(fetchCurrentUser.rejected, (state) => {
-        state.isLoading = false;
-        state.isAuthenticated = false;
+      .addCase(login.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || "Connexion impossible";
+      })
+      .addCase(registerCompany.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(registerCompany.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(registerCompany.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || "Inscription impossible";
+      })
+      .addCase(loadCurrentUser.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(loadCurrentUser.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload;
+        state.token = tokenStorage.get();
+      })
+      .addCase(loadCurrentUser.rejected, (state) => {
+        state.loading = false;
         state.user = null;
         state.token = null;
+        tokenStorage.clear();
       });
   },
 });
 
-export const { logout, clearError } = authSlice.actions;
+export const { logout, clearAuthError } = authSlice.actions;
 export default authSlice.reducer;

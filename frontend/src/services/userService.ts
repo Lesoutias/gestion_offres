@@ -1,23 +1,11 @@
-import { api, authHeader } from "./api";
+import { api, unwrap } from "./api";
+import type { User, UserCreate, UserUpdate } from "../types";
 
-export type User = {
-  id: number;
-  email: string;
-  full_name: string | null;
-  is_active: boolean;
-  role_name: string;
-};
-
-export const fetchCurrentUser = async () => {
-  const response = await api.get<User>("/users/me", {
-    headers: authHeader(),
-  });
-  return response.data;
-};
-
-export const listUsers = async () => {
-  const response = await api.get<User[]>("/users", {
-    headers: authHeader(),
-  });
-  return response.data;
+export const userService = {
+  getAll: () => unwrap<User[]>(api.get("/users")),
+  getById: (id: number) => unwrap<User>(api.get(`/users/${id}`)),
+  create: (payload: UserCreate) => unwrap<User>(api.post("/users", payload)),
+  update: (id: number, payload: UserUpdate) => unwrap<User>(api.put(`/users/${id}`, payload)),
+  activate: (id: number) => unwrap<User>(api.patch(`/users/${id}/activate`)),
+  deactivate: (id: number) => unwrap<User>(api.patch(`/users/${id}/deactivate`)),
 };

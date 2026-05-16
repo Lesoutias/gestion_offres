@@ -1,39 +1,23 @@
-import { DashboardLayout } from "../../components/layout/DashboardLayout";
+import { dashboardService } from "../../services/dashboardService";
+import { PageTitle, StateBlock, StatGrid, useAsyncData } from "../PageHelpers";
 
-export function AdminDashboardPage(): JSX.Element {
+export default function AdminDashboardPage() {
+  const { data, loading, error } = useAsyncData(() => dashboardService.getAdminStats(), []);
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        <h1 className="text-3xl font-bold text-gray-900">
-          Tableau de bord administrateur
-        </h1>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-gray-600 text-sm font-semibold">
-              Total utilisateurs
-            </h3>
-            <p className="text-3xl font-bold text-blue-600 mt-2">0</p>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-gray-600 text-sm font-semibold">
-              Offres publiées
-            </h3>
-            <p className="text-3xl font-bold text-green-600 mt-2">0</p>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-gray-600 text-sm font-semibold">
-              Offres en attente
-            </h3>
-            <p className="text-3xl font-bold text-orange-600 mt-2">0</p>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-gray-600 text-sm font-semibold">
-              Signalements
-            </h3>
-            <p className="text-3xl font-bold text-red-600 mt-2">0</p>
-          </div>
-        </div>
-      </div>
-    </DashboardLayout>
+    <>
+      <PageTitle title="Dashboard administrateur" description="Vue globale de la plateforme." />
+      <StateBlock loading={loading} error={error}>
+        {data && <StatGrid items={[
+          { label: "Utilisateurs", value: data.total_users },
+          { label: "Entreprises", value: data.total_companies },
+          { label: "Appels d'offres", value: data.total_tender_calls },
+          { label: "Offres soumises", value: data.submitted_offers },
+          { label: "Marches attribues", value: data.awarded_public_contracts },
+          { label: "Contrats signes", value: data.signed_contracts },
+          { label: "Projets en execution", value: data.projects_in_execution },
+          { label: "Montant attribue", value: data.total_awarded_amount.toLocaleString() },
+        ]} />}
+      </StateBlock>
+    </>
   );
 }

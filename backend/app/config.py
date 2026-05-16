@@ -1,4 +1,9 @@
+from pathlib import Path
+
 from pydantic_settings import BaseSettings
+
+
+BASE_DIR = Path(__file__).resolve().parents[1]
 
 
 class Settings(BaseSettings):
@@ -20,7 +25,8 @@ class Settings(BaseSettings):
     MAX_FILE_SIZE: int = 5 * 1024 * 1024  # 5MB
 
     class Config:
-        env_file = ".env"
+        env_file = BASE_DIR / ".env"
+        env_file_encoding = "utf-8"
 
 
 settings = Settings()

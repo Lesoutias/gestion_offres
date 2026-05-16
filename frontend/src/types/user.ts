@@ -1,47 +1,26 @@
-export type UserRole = "admin" | "recruiter" | "candidate";
+import type { Role, UserRole } from "./role";
 
 export interface User {
   id: number;
   email: string;
-  full_name: string;
-  role_name: UserRole;
-  created_at: string;
-  updated_at: string;
+  full_name?: string | null;
+  is_active: boolean;
+  role_id?: number | null;
+  role_name?: UserRole | string | null;
+  role?: Role | null;
+  created_at?: string | null;
+  updated_at?: string | null;
 }
 
-export interface UserProfile {
-  id: number;
+export interface UserCreate {
   email: string;
-  full_name: string;
-  role_name: UserRole;
-  phone?: string;
-  address?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface AuthState {
-  user: User | null;
-  token: string | null;
-  isLoading: boolean;
-  error: string | null;
-  isAuthenticated: boolean;
-}
-
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-export interface RegisterRequest {
-  email: string;
-  full_name: string;
+  full_name?: string;
   password: string;
   role_name: UserRole;
 }
 
-export interface AuthResponse {
-  access_token: string;
-  token_type: string;
-  user: User;
+export interface UserUpdate {
+  full_name?: string;
+  is_active?: boolean;
+  role_name?: UserRole;
 }
