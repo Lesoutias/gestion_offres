@@ -1,4 +1,9 @@
-export type ContractStatus = "draft" | "signed" | "cancelled";
+export type ContractStatus =
+  | "draft"
+  | "pending"
+  | "signed"
+  | "rejected"
+  | "cancelled";
 
 export interface Contract {
   id: number;

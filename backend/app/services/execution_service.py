@@ -28,6 +28,16 @@ def list_executions(db: Session) -> list[Execution]:
     return db.query(Execution).order_by(Execution.created_at.desc()).all()
 
 
+def list_company_executions(db: Session, company_id: int) -> list[Execution]:
+    return (
+        db.query(Execution)
+        .join(PublicContract, Execution.public_contract_id == PublicContract.id)
+        .filter(PublicContract.company_id == company_id)
+        .order_by(Execution.created_at.desc())
+        .all()
+    )
+
+
 def get_execution(db: Session, execution_id: int) -> Execution:
     execution = db.query(Execution).filter(Execution.id == execution_id).first()
     if not execution:

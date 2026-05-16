@@ -1,6 +1,7 @@
 export type PublicContractStatus =
   | "awarded"
   | "contract_pending"
+  | "contract_rejected"
   | "signed"
   | "in_execution"
   | "completed"

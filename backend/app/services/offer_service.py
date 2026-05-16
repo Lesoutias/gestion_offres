@@ -82,15 +82,20 @@ def update_offer_status(db: Session, offer_id: int, data: OfferStatusUpdate) -> 
 def award_offer(db: Session, offer_id: int) -> PublicContract:
     offer = get_offer(db, offer_id)
     tender = offer.tender_call
-    if tender.statut not in ["evaluation", "closed"]:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="L'appel d'offres n'est pas en evaluation")
-    if offer.statut != "accepted":
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Seule une offre acceptee peut etre attribuee")
+    if tender.statut not in ["published", "evaluation", "closed"]:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="L'appel d'offres n'est pas eligible a l'attribution")
+    if offer.statut not in ["submitted", "under_review", "accepted"]:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Offre non eligible a l'attribution")
     existing = db.query(PublicContract).filter(PublicContract.tender_call_id == offer.tender_call_id).first()
     if existing:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Marche deja attribue")
 
     offer.statut = "awarded"
+    (
+        db.query(Offer)
+        .filter(Offer.tender_call_id == offer.tender_call_id, Offer.id != offer.id)
+        .update({"statut": "rejected"}, synchronize_session=False)
+    )
     tender.statut = "awarded"
     public_contract = PublicContract(
         tender_call_id=offer.tender_call_id,

@@ -3,16 +3,11 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..schemas.auth_schema import LoginRequest, RegisterRequest, Token
-from ..schemas.user_schema import UserRead, UserCreate
-from ..services.auth_service import authenticate_user, create_user, create_tokens
 from ..models.user import User
-from ..schemas.auth_schema import AdminUserCreateRequest, CompanyRegisterRequest, LoginRequest, Token
+from ..schemas.auth_schema import CompanyRegisterRequest, LoginRequest, Token
 from ..schemas.user_schema import UserRead
 from ..security.jwt import verify_token
-from ..security.permissions import ADMIN, require_roles
-from ..services.auth_service import authenticate_user, create_admin_managed_user, create_tokens, register_company
-from ..services.audit_log_service import log_action
+from ..services.auth_service import authenticate_user, create_tokens, register_company
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
@@ -34,25 +29,8 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 
 
 @router.post("/register", response_model=UserRead)
-def register(user_data: RegisterRequest, db: Session = Depends(get_db)):
-    existing = db.query(User).filter(User.email == user_data.email).first()
-    if existing:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email déjà utilisé")
-    user = create_user(db, UserCreate(**user_data.dict()))
-    
-    # Créer un profil candidat si c'est un candidat
-    if user.role.name == "candidate":
-        candidate_profile = CandidateProfile(user_id=user.id)
-        db.add(candidate_profile)
-        db.commit()
-    
-    return UserRead(
-        id=user.id,
-        email=user.email,
-        full_name=user.full_name,
-        is_active=user.is_active,
-        role_name=user.role.name,
-    )
+def register(user_data: CompanyRegisterRequest, db: Session = Depends(get_db)):
+    return register_company(db, user_data)
 
 
 @router.post("/login", response_model=Token)

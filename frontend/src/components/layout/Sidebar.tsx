@@ -34,7 +34,7 @@ const navByRole: Record<UserRole, NavItem[]> = {
     { label: "Profil", to: "/company/profile" },
     { label: "Appels publies", to: "/company/tender-calls" },
     { label: "Mes offres", to: "/company/offers" },
-    { label: "Mes marches", to: "/company/public-contracts" },
+    { label: "Mes contrats", to: "/company/public-contracts" },
     { label: "Executions", to: "/company/executions" },
   ],
   commission_evaluation: [

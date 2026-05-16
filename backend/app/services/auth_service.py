@@ -14,7 +14,6 @@ def authenticate_user(db: Session, email: str, password: str) -> User | None:
     if not user or not verify_password(password, user.hashed_password):
         return None
     if not user.is_active:
-<<<<<<< HEAD
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Compte desactive")
     return user
 
@@ -55,25 +54,6 @@ def register_company(db: Session, data: CompanyRegisterRequest) -> User:
         owner_id=user.id,
     )
     db.add(company)
-=======
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Utilisateur inactif. Contactez l'administrateur.",
-        )
-    return user
-
-
-def create_user(db: Session, user_data: UserCreate) -> User:
-    hashed_password = hash_password(user_data.password)
-    user = User(
-        email=user_data.email,
-        full_name=user_data.full_name,
-        hashed_password=hashed_password,
-        is_active=user_data.is_active,  # Allow setting is_active
-        role_id=user_data.role_id,
-    )
-    db.add(user)
->>>>>>> 225b83bb86ef1ee73f1852449d2e0cf0729e6585
     db.commit()
     db.refresh(user)
     return user

@@ -21,51 +21,12 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-<<<<<<< HEAD
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     const user = await dispatch(login({ email, password })).unwrap();
     const role = (user.role?.name || user.role_name) as UserRole;
     const fallback = redirectByRole[role] || "/";
     navigate((location.state as { from?: { pathname?: string } })?.from?.pathname || fallback);
-=======
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
-
-  const [formError, setFormError] = useState("");
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setFormError("");
-
-    if (!formData.email || !formData.password) {
-      setFormError("Email et mot de passe sont obligatoires");
-      return;
-    }
-
-    try {
-      await dispatch(
-        loginUser({
-          email: formData.email,
-          password: formData.password,
-        }),
-      ).unwrap();
-
-      navigate("/dashboard");
-    } catch (err) {
-      setFormError(error || "Erreur de connexion");
-    }
->>>>>>> 225b83bb86ef1ee73f1852449d2e0cf0729e6585
   };
 
   return (

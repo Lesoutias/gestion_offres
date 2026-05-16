@@ -6,8 +6,8 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models.user import User
 from ..schemas.execution_schema import ExecutionCreate, ExecutionRead, ExecutionUpdate
-from ..security.permissions import ADMIN, AUTORITE_PUBLIQUE, require_roles
-from ..services import execution_service
+from ..security.permissions import ADMIN, AUTORITE_PUBLIQUE, ENTREPRISE, require_roles
+from ..services import company_service, execution_service
 from ..services.audit_log_service import log_action
 from .auth_routes import get_current_user
 
@@ -26,6 +26,13 @@ def create_execution(data: ExecutionCreate, db: Session = Depends(get_db), curre
 def list_executions(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     require_roles(current_user, [ADMIN, AUTORITE_PUBLIQUE])
     return execution_service.list_executions(db)
+
+
+@router.get("/me", response_model=List[ExecutionRead])
+def get_my_executions(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    require_roles(current_user, [ENTREPRISE])
+    company = company_service.get_my_company(db, current_user.id)
+    return execution_service.list_company_executions(db, company.id)
 
 
 @router.get("/public-contract/{public_contract_id}", response_model=ExecutionRead)

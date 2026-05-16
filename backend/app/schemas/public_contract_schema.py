@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field
 PublicContractStatus = Literal[
     "awarded",
     "contract_pending",
+    "contract_rejected",
     "signed",
     "in_execution",
     "completed",

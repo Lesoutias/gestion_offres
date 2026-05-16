@@ -4,6 +4,7 @@ import type { Execution, ExecutionCreate, ExecutionReport, ExecutionReportCreate
 export const executionService = {
   create: (payload: ExecutionCreate) => unwrap<Execution>(api.post("/executions", payload)),
   getAll: () => unwrap<Execution[]>(api.get("/executions")),
+  getMine: () => unwrap<Execution[]>(api.get("/executions/me")),
   getByPublicContract: (publicContractId: number) => unwrap<Execution>(api.get(`/executions/public-contract/${publicContractId}`)),
   getById: (id: number) => unwrap<Execution>(api.get(`/executions/${id}`)),
   update: (id: number, payload: ExecutionUpdate) => unwrap<Execution>(api.put(`/executions/${id}`, payload)),

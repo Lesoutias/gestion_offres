@@ -3,7 +3,7 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict
 
-ContractStatus = Literal["draft", "signed", "cancelled"]
+ContractStatus = Literal["draft", "pending", "signed", "rejected", "cancelled"]
 
 
 class ContractBase(BaseModel):

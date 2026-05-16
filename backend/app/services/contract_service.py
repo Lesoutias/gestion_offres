@@ -40,6 +40,16 @@ def get_contract_by_public_contract(db: Session, public_contract_id: int) -> Con
     return contract
 
 
+def list_company_contracts(db: Session, company_id: int) -> list[Contract]:
+    return (
+        db.query(Contract)
+        .join(PublicContract, Contract.public_contract_id == PublicContract.id)
+        .filter(PublicContract.company_id == company_id)
+        .order_by(Contract.created_at.desc())
+        .all()
+    )
+
+
 def update_contract(db: Session, contract_id: int, data: ContractUpdate) -> Contract:
     contract = get_contract(db, contract_id)
     for field, value in data.model_dump(exclude_unset=True).items():
@@ -57,19 +67,40 @@ def attach_contract_file(db: Session, contract_id: int, file_url: str) -> Contra
     return contract
 
 
-def sign_contract(db: Session, contract_id: int) -> Contract:
+def send_contract_to_company(db: Session, contract_id: int) -> Contract:
     contract = get_contract(db, contract_id)
     if contract.statut != "draft":
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Contrat non signable")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Contrat doit être en brouillon pour être envoyé")
+    contract.statut = "pending"
+    db.commit()
+    db.refresh(contract)
+    return contract
+
+
+def accept_contract(db: Session, contract_id: int) -> Contract:
+    contract = get_contract(db, contract_id)
+    if contract.statut != "pending":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Contrat non en attente d'acceptation")
     public_contract = contract.public_contract
     if public_contract.statut not in ["awarded", "contract_pending"]:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Marche non signable")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Marche non eligible")
     contract.statut = "signed"
     contract.date_signature = datetime.now(timezone.utc)
     public_contract.statut = "signed"
     existing_execution = db.query(Execution).filter(Execution.public_contract_id == public_contract.id).first()
     if not existing_execution:
         db.add(Execution(public_contract_id=public_contract.id, statut="not_started", avancement=0))
+    db.commit()
+    db.refresh(contract)
+    return contract
+
+
+def reject_contract(db: Session, contract_id: int) -> Contract:
+    contract = get_contract(db, contract_id)
+    if contract.statut != "pending":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Contrat non en attente d'acceptation")
+    contract.statut = "rejected"
+    contract.public_contract.statut = "contract_rejected"
     db.commit()
     db.refresh(contract)
     return contract

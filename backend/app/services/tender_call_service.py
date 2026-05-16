@@ -88,9 +88,9 @@ def cancel_tender_call(db: Session, tender_call_id: int) -> TenderCall:
 def start_evaluation(db: Session, tender_call_id: int) -> TenderCall:
     tender = get_tender_call(db, tender_call_id)
     if tender.statut not in ["published", "closed"]:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Evaluation impossible")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Le marché doit être publié ou clôturé pour démarrer l'évaluation")
     if tender.date_limite > _now():
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="La date limite n'est pas encore atteinte")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="La date limite de soumission n'est pas encore atteinte. L'évaluation pourra être lancée après cette date.")
     tender.statut = "evaluation"
     db.commit()
     db.refresh(tender)
