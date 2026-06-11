@@ -1,4 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import axios from "axios";
 import { authService } from "../../services/authService";
 import { getApiErrorMessage, tokenStorage } from "../../services/api";
 import type { AuthState, LoginRequest, RegisterCompanyRequest } from "../../types";
@@ -23,7 +24,19 @@ export const registerCompany = createAsyncThunk("auth/registerCompany", async (p
   await authService.registerCompany(payload);
 });
 
-export const loadCurrentUser = createAsyncThunk("auth/me", async () => authService.getCurrentUser());
+export const loadCurrentUser = createAsyncThunk(
+  "auth/me",
+  async (_, { rejectWithValue }) => {
+    try {
+      return await authService.getCurrentUser();
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        return rejectWithValue("unauthorized");
+      }
+      return rejectWithValue(getApiErrorMessage(error, "Impossible de charger la session"));
+    }
+  },
+);
 
 const authSlice = createSlice({
   name: "auth",
@@ -73,11 +86,15 @@ const authSlice = createSlice({
         state.user = action.payload;
         state.token = tokenStorage.get();
       })
-      .addCase(loadCurrentUser.rejected, (state) => {
+      .addCase(loadCurrentUser.rejected, (state, action) => {
         state.loading = false;
-        state.user = null;
-        state.token = null;
-        tokenStorage.clear();
+        if (action.payload === "unauthorized") {
+          state.user = null;
+          state.token = null;
+          tokenStorage.clear();
+        } else {
+          state.error = action.payload as string;
+        }
       });
   },
 });

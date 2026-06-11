@@ -5,16 +5,16 @@ import AppRouter from "./router/AppRouter";
 
 export default function App() {
   const dispatch = useAppDispatch();
-  const token = useAppSelector((state) => state.auth.token);
+  const { token, user } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
-    if (token) {
+    if (token && !user) {
       dispatch(loadCurrentUser());
     }
     const onLogout = () => dispatch(logout());
     window.addEventListener("auth:logout", onLogout);
     return () => window.removeEventListener("auth:logout", onLogout);
-  }, [dispatch, token]);
+  }, [dispatch, token, user]);
 
   return <AppRouter />;
 }
