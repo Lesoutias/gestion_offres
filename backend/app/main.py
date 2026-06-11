@@ -27,7 +27,7 @@ app = FastAPI(title="Gestion Appels d'Offres API - Mairie de Goma")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.cors_origins_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
