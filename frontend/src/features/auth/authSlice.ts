@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { authService } from "../../services/authService";
-import { tokenStorage } from "../../services/api";
+import { getApiErrorMessage, tokenStorage } from "../../services/api";
 import type { AuthState, LoginRequest, RegisterCompanyRequest } from "../../types";
 
 const initialState: AuthState = {
@@ -10,9 +10,13 @@ const initialState: AuthState = {
   error: null,
 };
 
-export const login = createAsyncThunk("auth/login", async (payload: LoginRequest) => {
-  await authService.login(payload);
-  return authService.getCurrentUser();
+export const login = createAsyncThunk("auth/login", async (payload: LoginRequest, { rejectWithValue }) => {
+  try {
+    await authService.login(payload);
+    return authService.getCurrentUser();
+  } catch (error) {
+    return rejectWithValue(getApiErrorMessage(error, "Connexion impossible"));
+  }
 });
 
 export const registerCompany = createAsyncThunk("auth/registerCompany", async (payload: RegisterCompanyRequest) => {
@@ -48,7 +52,7 @@ const authSlice = createSlice({
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || "Connexion impossible";
+        state.error = (action.payload as string) || action.error.message || "Connexion impossible";
       })
       .addCase(registerCompany.pending, (state) => {
         state.loading = true;
