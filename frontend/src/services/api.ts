@@ -1,7 +1,22 @@
 import axios from "axios";
 
 const TOKEN_KEY = "auth_token";
-const API_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || "http://localhost:8001/api";
+
+function resolveApiBaseUrl(): string {
+  const raw =
+    import.meta.env.VITE_API_URL ||
+    import.meta.env.VITE_API_BASE_URL ||
+    "http://localhost:8001/api";
+
+  if (raw.startsWith("/")) {
+    return raw.replace(/\/+$/, "") || "/api";
+  }
+
+  const normalized = raw.replace(/\/+$/, "");
+  return normalized.endsWith("/api") ? normalized : `${normalized}/api`;
+}
+
+const API_URL = resolveApiBaseUrl();
 
 export const api = axios.create({
   baseURL: API_URL,
