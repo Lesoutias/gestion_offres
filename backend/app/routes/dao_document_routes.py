@@ -13,7 +13,7 @@ from .auth_routes import get_current_user
 router = APIRouter()
 
 
-@router.post("/", response_model=DaoDocumentRead)
+@router.post("", response_model=DaoDocumentRead)
 def create_dao_document(data: DaoDocumentCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     require_roles(current_user, [ADMIN, AUTORITE_PUBLIQUE])
     dao = dao_document_service.create_dao_document(db, data)

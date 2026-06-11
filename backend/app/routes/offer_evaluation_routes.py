@@ -14,7 +14,7 @@ from .auth_routes import get_current_user
 router = APIRouter()
 
 
-@router.post("/", response_model=OfferEvaluationRead)
+@router.post("", response_model=OfferEvaluationRead)
 def create_evaluation(
     data: OfferEvaluationCreate,
     db: Session = Depends(get_db),

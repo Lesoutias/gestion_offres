@@ -19,7 +19,7 @@ def read_current_user(current_user: User = Depends(get_current_user)):
     return current_user
 
 
-@router.get("/", response_model=List[UserRead])
+@router.get("", response_model=List[UserRead])
 def list_users(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     require_roles(current_user, [ADMIN, AUTORITE_PUBLIQUE])
     return user_service.list_users(db)
@@ -31,7 +31,7 @@ def get_user(user_id: int, db: Session = Depends(get_db), current_user: User = D
     return user_service.get_user(db, user_id)
 
 
-@router.post("/", response_model=UserRead)
+@router.post("", response_model=UserRead)
 def create_user(data: UserCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     require_roles(current_user, [ADMIN])
     user = user_service.create_user(db, data)

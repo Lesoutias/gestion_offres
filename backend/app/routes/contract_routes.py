@@ -13,7 +13,7 @@ from .auth_routes import get_current_user
 router = APIRouter()
 
 
-@router.post("/", response_model=ContractRead)
+@router.post("", response_model=ContractRead)
 def create_contract(data: ContractCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     require_roles(current_user, [ADMIN, AUTORITE_PUBLIQUE])
     contract = contract_service.create_contract(db, data)

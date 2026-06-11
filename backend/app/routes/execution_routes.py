@@ -14,7 +14,7 @@ from .auth_routes import get_current_user
 router = APIRouter()
 
 
-@router.post("/", response_model=ExecutionRead)
+@router.post("", response_model=ExecutionRead)
 def create_execution(data: ExecutionCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     require_roles(current_user, [ADMIN, AUTORITE_PUBLIQUE])
     execution = execution_service.create_execution(db, data)
@@ -22,7 +22,7 @@ def create_execution(data: ExecutionCreate, db: Session = Depends(get_db), curre
     return execution
 
 
-@router.get("/", response_model=List[ExecutionRead])
+@router.get("", response_model=List[ExecutionRead])
 def list_executions(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     require_roles(current_user, [ADMIN, AUTORITE_PUBLIQUE])
     return execution_service.list_executions(db)

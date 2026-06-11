@@ -23,7 +23,10 @@ from .routes.dashboard_routes import router as dashboard_router
 from .routes.audit_log_routes import router as audit_log_router
 from .seed_data import seed_database
 
-app = FastAPI(title="Gestion Appels d'Offres API - Mairie de Goma")
+app = FastAPI(
+    title="Gestion Appels d'Offres API - Mairie de Goma",
+    redirect_slashes=False,
+)
 
 _cors_origins = settings.cors_origins_list
 app.add_middleware(

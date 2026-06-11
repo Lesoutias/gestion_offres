@@ -21,7 +21,7 @@ from .auth_routes import get_current_user
 router = APIRouter()
 
 
-@router.get("/", response_model=List[PublicAuthorityRead])
+@router.get("", response_model=List[PublicAuthorityRead])
 def list_public_authorities(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     require_roles(current_user, [ADMIN, AUTORITE_PUBLIQUE])
     return public_authority_service.list_public_authorities(db)
@@ -33,7 +33,7 @@ def get_public_authority(authority_id: int, db: Session = Depends(get_db), curre
     return public_authority_service.get_public_authority(db, authority_id)
 
 
-@router.post("/", response_model=PublicAuthorityRead)
+@router.post("", response_model=PublicAuthorityRead)
 def create_public_authority(
     data: PublicAuthorityCreate,
     db: Session = Depends(get_db),

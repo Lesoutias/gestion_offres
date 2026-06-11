@@ -15,7 +15,7 @@ from .auth_routes import get_current_user
 router = APIRouter()
 
 
-@router.post("/", response_model=OfferRead)
+@router.post("", response_model=OfferRead)
 def submit_offer(data: OfferCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     require_roles(current_user, [ENTREPRISE])
     company = company_service.get_my_company(db, current_user.id)

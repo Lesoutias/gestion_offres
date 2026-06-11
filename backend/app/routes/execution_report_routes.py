@@ -15,7 +15,7 @@ from .auth_routes import get_current_user
 router = APIRouter()
 
 
-@router.post("/", response_model=ExecutionReportRead)
+@router.post("", response_model=ExecutionReportRead)
 def create_execution_report(
     data: ExecutionReportCreate,
     db: Session = Depends(get_db),

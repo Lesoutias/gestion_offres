@@ -14,7 +14,7 @@ from .auth_routes import get_current_user
 router = APIRouter()
 
 
-@router.post("/", response_model=TenderCallRead)
+@router.post("", response_model=TenderCallRead)
 def create_tender_call(
     data: TenderCallCreate,
     db: Session = Depends(get_db),
@@ -28,7 +28,7 @@ def create_tender_call(
     return tender
 
 
-@router.get("/", response_model=List[TenderCallRead])
+@router.get("", response_model=List[TenderCallRead])
 def list_tender_calls(db: Session = Depends(get_db)):
     return tender_call_service.list_published_tender_calls(db)
 

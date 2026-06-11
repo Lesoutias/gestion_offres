@@ -14,13 +14,13 @@ from .auth_routes import get_current_user
 router = APIRouter()
 
 
-@router.get("/", response_model=List[RoleRead])
+@router.get("", response_model=List[RoleRead])
 def list_roles(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     require_roles(current_user, [ADMIN])
     return role_service.list_roles(db)
 
 
-@router.post("/", response_model=RoleRead)
+@router.post("", response_model=RoleRead)
 def create_role(data: RoleCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     require_roles(current_user, [ADMIN])
     role = role_service.create_role(db, data)

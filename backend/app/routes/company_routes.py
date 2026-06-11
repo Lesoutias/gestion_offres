@@ -14,7 +14,7 @@ from .auth_routes import get_current_user
 router = APIRouter()
 
 
-@router.get("/", response_model=List[CompanyRead])
+@router.get("", response_model=List[CompanyRead])
 def list_companies(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     require_roles(current_user, [ADMIN, AUTORITE_PUBLIQUE])
     return company_service.list_companies(db)
@@ -37,7 +37,7 @@ def get_company(company_id: int, db: Session = Depends(get_db), current_user: Us
     return company_service.get_company(db, company_id)
 
 
-@router.post("/", response_model=CompanyRead)
+@router.post("", response_model=CompanyRead)
 def create_company(data: CompanyCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     require_roles(current_user, [ADMIN, ENTREPRISE])
     if current_user.role.name == ENTREPRISE:

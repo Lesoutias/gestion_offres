@@ -14,13 +14,13 @@ from .auth_routes import get_current_user
 router = APIRouter()
 
 
-@router.get("/", response_model=List[PermissionRead])
+@router.get("", response_model=List[PermissionRead])
 def list_permissions(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     require_roles(current_user, [ADMIN])
     return permission_service.list_permissions(db)
 
 
-@router.post("/", response_model=PermissionRead)
+@router.post("", response_model=PermissionRead)
 def create_permission(data: PermissionCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     require_roles(current_user, [ADMIN])
     permission = permission_service.create_permission(db, data)

@@ -14,7 +14,7 @@ from .auth_routes import get_current_user
 router = APIRouter()
 
 
-@router.post("/", response_model=PublicContractRead)
+@router.post("", response_model=PublicContractRead)
 def create_public_contract(
     data: PublicContractCreate,
     db: Session = Depends(get_db),
@@ -26,7 +26,7 @@ def create_public_contract(
     return public_contract
 
 
-@router.get("/", response_model=List[PublicContractRead])
+@router.get("", response_model=List[PublicContractRead])
 def list_public_contracts(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     require_roles(current_user, [ADMIN, AUTORITE_PUBLIQUE])
     return public_contract_service.list_public_contracts(db)
