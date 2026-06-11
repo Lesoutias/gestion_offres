@@ -25,10 +25,11 @@ from .seed_data import seed_database
 
 app = FastAPI(title="Gestion Appels d'Offres API - Mairie de Goma")
 
+_cors_origins = settings.cors_origins_list
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins_list,
-    allow_credentials=True,
+    allow_origins=_cors_origins,
+    allow_credentials="*" not in _cors_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )

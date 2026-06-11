@@ -13,7 +13,11 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24
     ALGORITHM: str = "HS256"
     API_PREFIX: str = "/api"
-    CORS_ORIGINS: str = "*"
+    CORS_ORIGINS: str = (
+        "http://localhost:4173,"
+        "http://localhost:8001,"
+        "https://gestion-offres-nine.vercel.app"
+    )
 
     # Email settings
     SMTP_SERVER: str = "smtp.gmail.com"
@@ -37,7 +41,11 @@ class Settings(BaseSettings):
     def cors_origins_list(self) -> list[str]:
         if self.CORS_ORIGINS.strip() == "*":
             return ["*"]
-        return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
+        return [
+            origin.strip().rstrip("/")
+            for origin in self.CORS_ORIGINS.split(",")
+            if origin.strip()
+        ]
 
     class Config:
         env_file = BASE_DIR / ".env"
