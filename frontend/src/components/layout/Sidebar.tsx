@@ -13,8 +13,14 @@ function isGroup(entry: NavEntry): entry is NavGroup {
 
 function isPathActive(pathname: string, to: string): boolean {
   if (pathname === to) return true;
-  if (to.endsWith("/create")) return false;
-  return pathname.startsWith(`${to}/`);
+  if (to.endsWith("/create")) {
+    return pathname === to;
+  }
+  if (!pathname.startsWith(`${to}/`)) {
+    return false;
+  }
+  const rest = pathname.slice(to.length + 1);
+  return rest !== "create" && !rest.startsWith("create/");
 }
 
 const navByRole: Record<UserRole, NavEntry[]> = {
@@ -113,7 +119,7 @@ function NavGroupSection({
               to={item.to}
               className={subLinkClass}
               onClick={onNavigate}
-              end={item.to.endsWith("/create")}
+              isActive={({ pathname }) => isPathActive(pathname, item.to)}
             >
               {item.label}
             </NavLink>
