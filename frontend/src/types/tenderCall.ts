@@ -18,7 +18,7 @@ export interface TenderCall {
 }
 
 export interface TenderCallCreate {
-  reference: string;
+  reference?: string;
   objet: string;
   description?: string;
   date_limite: string;

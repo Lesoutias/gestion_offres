@@ -16,7 +16,14 @@ class TenderCallBase(BaseModel):
     lieu_execution: Optional[str] = None
 
 
-class TenderCallCreate(TenderCallBase):
+class TenderCallCreate(BaseModel):
+    reference: Optional[str] = None
+    objet: str
+    description: Optional[str] = None
+    date_limite: datetime
+    budget_previsionnel: Optional[float] = None
+    type_marche: Optional[str] = None
+    lieu_execution: Optional[str] = None
     authority_id: int
     published_by_id: Optional[int] = None
 

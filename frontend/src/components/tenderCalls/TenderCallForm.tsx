@@ -4,8 +4,7 @@ import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 
 export function TenderCallForm({ onSubmit }: { onSubmit: (payload: TenderCallCreate) => Promise<void> | void }) {
-  const [form, setForm] = useState<TenderCallCreate>({
-    reference: "",
+  const [form, setForm] = useState<Omit<TenderCallCreate, "reference">>({
     objet: "",
     description: "",
     date_limite: "",
@@ -19,7 +18,9 @@ export function TenderCallForm({ onSubmit }: { onSubmit: (payload: TenderCallCre
 
   return (
     <form onSubmit={submit} className="grid gap-4">
-      <Input label="Reference" value={form.reference} onChange={(e) => setForm({ ...form, reference: e.target.value })} required />
+      <p className="text-sm text-slate-600">
+        La reference sera generee automatiquement (ex. AO-2026-0001).
+      </p>
       <Input label="Objet" value={form.objet} onChange={(e) => setForm({ ...form, objet: e.target.value })} required />
       <Input label="Date limite" type="datetime-local" value={form.date_limite} onChange={(e) => setForm({ ...form, date_limite: e.target.value })} required />
       <Input label="Budget previsionnel" type="number" value={form.budget_previsionnel ?? ""} onChange={(e) => setForm({ ...form, budget_previsionnel: Number(e.target.value) })} />

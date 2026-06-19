@@ -40,11 +40,30 @@ def get_tender_call(db: Session, tender_call_id: int) -> TenderCall:
     return tender
 
 
+def generate_reference(db: Session) -> str:
+    year = _now().year
+    prefix = f"AO-{year}-"
+    references = (
+        db.query(TenderCall.reference)
+        .filter(TenderCall.reference.like(f"{prefix}%"))
+        .all()
+    )
+    max_seq = 0
+    for (reference,) in references:
+        suffix = reference.removeprefix(prefix)
+        if suffix.isdigit():
+            max_seq = max(max_seq, int(suffix))
+    return f"{prefix}{max_seq + 1:04d}"
+
+
 def create_tender_call(db: Session, data: TenderCallCreate) -> TenderCall:
-    existing = db.query(TenderCall).filter(TenderCall.reference == data.reference).first()
+    payload = data.model_dump()
+    reference = payload.get("reference") or generate_reference(db)
+    existing = db.query(TenderCall).filter(TenderCall.reference == reference).first()
     if existing:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Reference deja utilisee")
-    tender = TenderCall(**data.model_dump())
+    payload["reference"] = reference
+    tender = TenderCall(**payload)
     db.add(tender)
     db.commit()
     db.refresh(tender)
