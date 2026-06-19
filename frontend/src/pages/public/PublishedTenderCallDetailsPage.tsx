@@ -3,6 +3,7 @@ import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { TenderCallStatusBadge } from "../../components/tenderCalls/TenderCallStatusBadge";
 import { tenderCallService } from "../../services/tenderCallService";
+import { formatAmount } from "../../utils/formatCurrency";
 import { PageTitle, StateBlock, useAsyncData } from "../PageHelpers";
 
 export default function PublishedTenderCallDetailsPage() {
@@ -21,7 +22,7 @@ export default function PublishedTenderCallDetailsPage() {
                 <div><dt className="font-semibold">Date limite</dt><dd>{new Date(data.date_limite).toLocaleString()}</dd></div>
                 <div><dt className="font-semibold">Lieu</dt><dd>{data.lieu_execution || "-"}</dd></div>
                 <div><dt className="font-semibold">Type</dt><dd>{data.type_marche || "-"}</dd></div>
-                <div><dt className="font-semibold">Budget</dt><dd>{data.budget_previsionnel?.toLocaleString() || "-"}</dd></div>
+                <div><dt className="font-semibold">Budget</dt><dd>{data.budget_previsionnel != null ? formatAmount(data.budget_previsionnel, data.budget_devise) : "-"}</dd></div>
               </dl>
               <Link to="/login" className="mt-6 inline-block"><Button>Se connecter pour soumettre une offre</Button></Link>
             </Card>

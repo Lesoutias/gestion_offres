@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models.user import User
 from ..schemas.user_schema import UserCreate, UserRead, UserUpdate
-from ..security.permissions import ADMIN, AUTORITE_PUBLIQUE, require_roles
+from ..security.permissions import ADMIN, AUTORITE_PUBLIQUE, MAIRIE_ROLES, require_roles
 from ..services import user_service
 from ..services.audit_log_service import log_action
 from .auth_routes import get_current_user
@@ -33,7 +33,7 @@ def get_user(user_id: int, db: Session = Depends(get_db), current_user: User = D
 
 @router.post("", response_model=UserRead)
 def create_user(data: UserCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    require_roles(current_user, [ADMIN])
+    require_roles(current_user, MAIRIE_ROLES)
     user = user_service.create_user(db, data)
     log_action(db, current_user.id, "user.create", "User", user.id)
     return user
@@ -46,7 +46,7 @@ def update_user(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    require_roles(current_user, [ADMIN])
+    require_roles(current_user, MAIRIE_ROLES)
     user = user_service.update_user(db, user_id, data)
     log_action(db, current_user.id, "user.update", "User", user.id)
     return user
@@ -54,7 +54,7 @@ def update_user(
 
 @router.patch("/{user_id}/activate", response_model=UserRead)
 def activate_user(user_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    require_roles(current_user, [ADMIN])
+    require_roles(current_user, MAIRIE_ROLES)
     user = user_service.activate_user(db, user_id)
     log_action(db, current_user.id, "user.activate", "User", user.id)
     return user
@@ -62,7 +62,7 @@ def activate_user(user_id: int, db: Session = Depends(get_db), current_user: Use
 
 @router.patch("/{user_id}/deactivate", response_model=UserRead)
 def deactivate_user(user_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    require_roles(current_user, [ADMIN])
+    require_roles(current_user, MAIRIE_ROLES)
     user = user_service.deactivate_user(db, user_id)
     log_action(db, current_user.id, "user.deactivate", "User", user.id)
     return user

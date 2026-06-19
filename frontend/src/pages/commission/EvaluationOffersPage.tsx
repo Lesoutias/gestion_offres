@@ -9,14 +9,29 @@ import { PageTitle, StateBlock, useAsyncData } from "../PageHelpers";
 
 export default function EvaluationOffersPage() {
   const navigate = useNavigate();
-  const tenderCallId = Number(useParams().id);
-  const offerId = Number(useParams().id);
-  const evaluatingSingle = window.location.pathname.includes("/commission/offers/");
-  const offers = useAsyncData(() => evaluatingSingle ? Promise.resolve([]) : offerService.getByTender(tenderCallId), [tenderCallId, evaluatingSingle]);
-  const singleOffer = useAsyncData(() => evaluatingSingle ? offerService.getById(offerId) : Promise.resolve(null), [offerId, evaluatingSingle]);
+  const { tenderCallId, offerId } = useParams();
+  const evaluatingSingle = Boolean(offerId);
+  const parsedTenderCallId = Number(tenderCallId);
+  const parsedOfferId = Number(offerId);
+  const offers = useAsyncData(
+    () => (evaluatingSingle ? Promise.resolve([]) : offerService.getByTender(parsedTenderCallId)),
+    [parsedTenderCallId, evaluatingSingle],
+  );
+  const singleOffer = useAsyncData(
+    () => (evaluatingSingle ? offerService.getById(parsedOfferId) : Promise.resolve(null)),
+    [parsedOfferId, evaluatingSingle],
+  );
+
   return (
     <>
-      <PageTitle title="Evaluation des offres" />
+      <PageTitle
+        title="Evaluation des offres"
+        description={
+          evaluatingSingle
+            ? "Saisissez les notes et le rapport de conformite pour cette offre."
+            : "Les entreprises doivent avoir soumis leurs offres avant le lancement de l'evaluation."
+        }
+      />
       {evaluatingSingle ? (
         <StateBlock loading={singleOffer.loading} error={singleOffer.error}>
           {singleOffer.data && (
@@ -38,16 +53,30 @@ export default function EvaluationOffersPage() {
         </StateBlock>
       ) : (
         <StateBlock loading={offers.loading} error={offers.error}>
-          <div className="grid gap-4">
-            {(offers.data || []).map((offer) => (
-              <div key={offer.id}>
-                <OfferCard offer={offer} />
-                <Link to={`/commission/offers/${offer.id}/evaluate`}>
-                  <Button className="mt-2">Evaluer et rediger le rapport</Button>
-                </Link>
-              </div>
-            ))}
-          </div>
+          {(offers.data || []).length === 0 ? (
+            <Card>
+              <p className="text-sm text-slate-700">
+                Aucune offre recue pour cet appel d'offres. Avant de lancer l'evaluation, une ou plusieurs
+                entreprises doivent soumettre leur offre tant que l'appel est publie et que la date limite
+                n'est pas depassee.
+              </p>
+              <p className="mt-3 text-sm text-slate-600">
+                Workflow : publier l'appel → entreprises soumettent leurs offres → l'autorite lance
+                l'evaluation → la commission evalue chaque offre recue.
+              </p>
+            </Card>
+          ) : (
+            <div className="grid gap-4">
+              {(offers.data || []).map((offer) => (
+                <div key={offer.id}>
+                  <OfferCard offer={offer} />
+                  <Link to={`/commission/offers/${offer.id}/evaluate`}>
+                    <Button className="mt-2">Evaluer et rediger le rapport</Button>
+                  </Link>
+                </div>
+              ))}
+            </div>
+          )}
         </StateBlock>
       )}
     </>

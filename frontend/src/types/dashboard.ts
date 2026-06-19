@@ -10,7 +10,8 @@ export interface AdminDashboardStats {
   signed_contracts: number;
   projects_in_execution: number;
   completed_projects: number;
-  total_awarded_amount: number;
+  total_awarded_amount_usd: number;
+  total_awarded_amount_cdf: number;
 }
 
 export interface AuthorityDashboardStats {
@@ -23,7 +24,8 @@ export interface AuthorityDashboardStats {
   signed_contracts: number;
   projects_in_execution: number;
   completed_projects: number;
-  total_awarded_amount: number;
+  total_awarded_amount_usd: number;
+  total_awarded_amount_cdf: number;
 }
 
 export interface CompanyDashboardStats {

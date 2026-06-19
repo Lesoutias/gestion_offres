@@ -15,6 +15,7 @@ class TenderCall(Base):
     date_limite = Column(DateTime(timezone=True), nullable=False)
     statut = Column(String(50), nullable=False, default="draft")
     budget_previsionnel = Column(Float, nullable=True)
+    budget_devise = Column(String(3), nullable=False, default="USD")
     type_marche = Column(String(100), nullable=True)
     lieu_execution = Column(String(255), nullable=True)
     authority_id = Column(Integer, ForeignKey("public_authorities.id"), nullable=False)

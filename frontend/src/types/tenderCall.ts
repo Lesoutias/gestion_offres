@@ -1,3 +1,5 @@
+import type { Currency } from "./currency";
+
 export type TenderStatus = "draft" | "published" | "closed" | "evaluation" | "awarded" | "cancelled";
 
 export interface TenderCall {
@@ -9,6 +11,7 @@ export interface TenderCall {
   date_limite: string;
   statut: TenderStatus;
   budget_previsionnel?: number | null;
+  budget_devise: Currency;
   type_marche?: string | null;
   lieu_execution?: string | null;
   authority_id: number;
@@ -23,6 +26,7 @@ export interface TenderCallCreate {
   description?: string;
   date_limite: string;
   budget_previsionnel?: number;
+  budget_devise?: Currency;
   type_marche?: string;
   lieu_execution?: string;
   authority_id: number;

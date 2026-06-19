@@ -4,12 +4,14 @@ from typing import Literal, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 OfferStatus = Literal["submitted", "under_review", "accepted", "rejected", "awarded"]
+Currency = Literal["CDF", "USD"]
 
 
 class OfferBase(BaseModel):
     tender_call_id: int
     company_id: int
     montant: float = Field(..., ge=0)
+    devise: Currency = "USD"
     delai_execution: Optional[str] = None
     proposition_technique: Optional[str] = None
     proposition_financiere: Optional[str] = None
@@ -21,6 +23,7 @@ class OfferCreate(OfferBase):
 
 class OfferUpdate(BaseModel):
     montant: Optional[float] = Field(default=None, ge=0)
+    devise: Optional[Currency] = None
     delai_execution: Optional[str] = None
     proposition_technique: Optional[str] = None
     proposition_financiere: Optional[str] = None

@@ -13,7 +13,8 @@ class AdminDashboardStats(BaseModel):
     signed_contracts: int = 0
     projects_in_execution: int = 0
     completed_projects: int = 0
-    total_awarded_amount: float = 0.0
+    total_awarded_amount_usd: float = 0.0
+    total_awarded_amount_cdf: float = 0.0
 
 
 class AuthorityDashboardStats(BaseModel):
@@ -26,7 +27,8 @@ class AuthorityDashboardStats(BaseModel):
     signed_contracts: int = 0
     projects_in_execution: int = 0
     completed_projects: int = 0
-    total_awarded_amount: float = 0.0
+    total_awarded_amount_usd: float = 0.0
+    total_awarded_amount_cdf: float = 0.0
 
 
 class CompanyDashboardStats(BaseModel):

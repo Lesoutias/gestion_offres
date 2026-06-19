@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models.user import User
 from ..schemas.public_contract_schema import PublicContractCreate, PublicContractRead
-from ..security.permissions import ADMIN, AUTORITE_PUBLIQUE, ENTREPRISE, require_roles
+from ..security.permissions import ADMIN, AUTORITE_PUBLIQUE, ENTREPRISE, MAIRIE_ROLES, require_roles
 from ..services import company_service, public_contract_service
 from ..services.audit_log_service import log_action
 from .auth_routes import get_current_user
@@ -45,7 +45,7 @@ def get_public_contract(public_contract_id: int, db: Session = Depends(get_db), 
     if current_user.role.name == ENTREPRISE:
         company = company_service.get_my_company(db, current_user.id)
         if public_contract.company_id != company.id:
-            require_roles(current_user, [ADMIN])
+            require_roles(current_user, MAIRIE_ROLES)
     else:
         require_roles(current_user, [ADMIN, AUTORITE_PUBLIQUE])
     return public_contract

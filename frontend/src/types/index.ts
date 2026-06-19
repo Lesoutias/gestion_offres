@@ -13,4 +13,5 @@ export * from "./publicContract";
 export * from "./contract";
 export * from "./execution";
 export * from "./dashboard";
+export * from "./currency";
 export * from "./auditLog";

@@ -69,11 +69,11 @@ PERMISSIONS = [
 
 ROLE_DEFINITIONS = {
     "admin": {
-        "description": "Administrateur principal de la plateforme",
+        "description": "Administrateur de la Mairie de Goma",
         "permissions": PERMISSIONS,
     },
     "autorite_publique": {
-        "description": "Mairie de Goma ou agent habilite avec droits administratifs",
+        "description": "Agent habilite de la Mairie de Goma",
         "permissions": PERMISSIONS,
     },
     "entreprise": {
@@ -202,12 +202,21 @@ def seed_database(verbose: bool = True) -> None:
         )
         get_or_create_public_authority(db, authority_user)
 
+        get_or_create_user(
+            db,
+            email="commission@mairiegoma.cd",
+            full_name="Commission d'evaluation Mairie de Goma",
+            password="Commission@12345",
+            role=roles["commission_evaluation"],
+        )
+
         db.commit()
 
         if verbose:
             print("Seed termine avec succes.")
             print("Admin: admin@mairiegoma.cd / Admin@12345")
             print("Autorite publique: autorite@mairiegoma.cd / Autorite@12345")
+            print("Commission evaluation: commission@mairiegoma.cd / Commission@12345")
     except Exception:
         db.rollback()
         raise

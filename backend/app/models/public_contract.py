@@ -13,6 +13,7 @@ class PublicContract(Base):
     offer_id = Column(Integer, ForeignKey("offers.id"), nullable=False)
     authority_id = Column(Integer, ForeignKey("public_authorities.id"), nullable=False)
     montant = Column(Float, nullable=False)
+    devise = Column(String(3), nullable=False, default="USD")
     statut = Column(String(50), nullable=False, default="awarded")
     date_attribution = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

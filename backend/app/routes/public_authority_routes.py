@@ -13,7 +13,7 @@ from ..schemas.public_authority_schema import (
     PublicAuthorityUpdate,
 )
 from ..schemas.tender_call_schema import TenderCallRead
-from ..security.permissions import ADMIN, AUTORITE_PUBLIQUE, require_roles
+from ..security.permissions import ADMIN, AUTORITE_PUBLIQUE, MAIRIE_ROLES, require_roles
 from ..services import public_authority_service
 from ..services.audit_log_service import log_action
 from .auth_routes import get_current_user
@@ -39,7 +39,7 @@ def create_public_authority(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    require_roles(current_user, [ADMIN])
+    require_roles(current_user, MAIRIE_ROLES)
     authority = public_authority_service.create_public_authority(db, data)
     log_action(db, current_user.id, "public_authority.create", "PublicAuthority", authority.id)
     return authority

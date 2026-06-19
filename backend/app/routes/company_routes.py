@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models.user import User
 from ..schemas.company_schema import CompanyCreate, CompanyRead, CompanyUpdate
-from ..security.permissions import ADMIN, AUTORITE_PUBLIQUE, ENTREPRISE, require_roles
+from ..security.permissions import ADMIN, AUTORITE_PUBLIQUE, ENTREPRISE, MAIRIE_ROLES, require_roles
 from ..services import company_service
 from ..services.audit_log_service import log_action
 from .auth_routes import get_current_user
@@ -39,7 +39,7 @@ def get_company(company_id: int, db: Session = Depends(get_db), current_user: Us
 
 @router.post("", response_model=CompanyRead)
 def create_company(data: CompanyCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    require_roles(current_user, [ADMIN, ENTREPRISE])
+    require_roles(current_user, [*MAIRIE_ROLES, ENTREPRISE])
     if current_user.role.name == ENTREPRISE:
         data.owner_id = current_user.id
     company = company_service.create_company(db, data)
@@ -58,7 +58,7 @@ def update_company(
     if current_user.role.name == ENTREPRISE and company.owner_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acces refuse")
     if current_user.role.name != ENTREPRISE:
-        require_roles(current_user, [ADMIN])
+        require_roles(current_user, MAIRIE_ROLES)
     updated = company_service.update_company(db, company_id, data)
     log_action(db, current_user.id, "company.update", "Company", updated.id)
     return updated
@@ -66,7 +66,7 @@ def update_company(
 
 @router.patch("/{company_id}/verify", response_model=CompanyRead)
 def verify_company(company_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    require_roles(current_user, [ADMIN])
+    require_roles(current_user, MAIRIE_ROLES)
     company = company_service.verify_company(db, company_id)
     log_action(db, current_user.id, "company.verify", "Company", company.id)
     return company

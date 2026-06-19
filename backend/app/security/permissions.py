@@ -7,10 +7,15 @@ ADMIN = "admin"
 AUTORITE_PUBLIQUE = "autorite_publique"
 ENTREPRISE = "entreprise"
 COMMISSION_EVALUATION = "commission_evaluation"
+MAIRIE_ROLES = [ADMIN, AUTORITE_PUBLIQUE]
 
 
 def get_user_role(user: User) -> str:
     return user.role.name if user.role else ""
+
+
+def is_mairie_role(user: User) -> bool:
+    return get_user_role(user) in MAIRIE_ROLES
 
 
 def user_has_role(user: User, roles: list[str]) -> bool:
@@ -28,8 +33,6 @@ def user_has_permission(user: User, permission: str) -> bool:
 
 
 def require_roles(user: User, roles: list[str]) -> None:
-    if ADMIN in roles and get_user_role(user) == AUTORITE_PUBLIQUE:
-        return
     if not user_has_role(user, roles):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -38,7 +41,7 @@ def require_roles(user: User, roles: list[str]) -> None:
 
 
 def require_permission(user: User, permission: str) -> None:
-    if get_user_role(user) == ADMIN:
+    if is_mairie_role(user):
         return
     if not user_has_permission(user, permission):
         raise HTTPException(
@@ -48,7 +51,7 @@ def require_permission(user: User, permission: str) -> None:
 
 
 def require_any_permission(user: User, permissions: list[str]) -> None:
-    if get_user_role(user) == ADMIN:
+    if is_mairie_role(user):
         return
     user_permissions = get_user_permissions(user)
     if not any(permission in user_permissions for permission in permissions):

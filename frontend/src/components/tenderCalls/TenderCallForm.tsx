@@ -1,7 +1,9 @@
 import { FormEvent, useState } from "react";
 import type { TenderCallCreate } from "../../types";
+import { CURRENCY_OPTIONS } from "../../utils/formatCurrency";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
+import { Select } from "../ui/Select";
 
 export function TenderCallForm({ onSubmit }: { onSubmit: (payload: TenderCallCreate) => Promise<void> | void }) {
   const [form, setForm] = useState<Omit<TenderCallCreate, "reference">>({
@@ -9,6 +11,7 @@ export function TenderCallForm({ onSubmit }: { onSubmit: (payload: TenderCallCre
     description: "",
     date_limite: "",
     authority_id: 1,
+    budget_devise: "USD",
   });
 
   const submit = (event: FormEvent) => {
@@ -23,7 +26,10 @@ export function TenderCallForm({ onSubmit }: { onSubmit: (payload: TenderCallCre
       </p>
       <Input label="Objet" value={form.objet} onChange={(e) => setForm({ ...form, objet: e.target.value })} required />
       <Input label="Date limite" type="datetime-local" value={form.date_limite} onChange={(e) => setForm({ ...form, date_limite: e.target.value })} required />
-      <Input label="Budget previsionnel" type="number" value={form.budget_previsionnel ?? ""} onChange={(e) => setForm({ ...form, budget_previsionnel: Number(e.target.value) })} />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Input label="Budget previsionnel" type="number" value={form.budget_previsionnel ?? ""} onChange={(e) => setForm({ ...form, budget_previsionnel: Number(e.target.value) })} />
+        <Select label="Devise du budget" value={form.budget_devise ?? "USD"} options={CURRENCY_OPTIONS} onChange={(e) => setForm({ ...form, budget_devise: e.target.value as NonNullable<TenderCallCreate["budget_devise"]> })} />
+      </div>
       <Input label="Type de marche" value={form.type_marche ?? ""} onChange={(e) => setForm({ ...form, type_marche: e.target.value })} />
       <Input label="Lieu d'execution" value={form.lieu_execution ?? ""} onChange={(e) => setForm({ ...form, lieu_execution: e.target.value })} />
       <label className="block">

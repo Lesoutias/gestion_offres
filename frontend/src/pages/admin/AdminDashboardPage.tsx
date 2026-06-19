@@ -1,4 +1,5 @@
 import { dashboardService } from "../../services/dashboardService";
+import { formatAmount } from "../../utils/formatCurrency";
 import { PageTitle, StateBlock, StatGrid, useAsyncData } from "../PageHelpers";
 
 export default function AdminDashboardPage() {
@@ -15,7 +16,8 @@ export default function AdminDashboardPage() {
           { label: "Marches attribues", value: data.awarded_public_contracts },
           { label: "Contrats signes", value: data.signed_contracts },
           { label: "Projets en execution", value: data.projects_in_execution },
-          { label: "Montant attribue", value: data.total_awarded_amount.toLocaleString() },
+          { label: "Montant attribue (USD)", value: formatAmount(data.total_awarded_amount_usd, "USD") },
+          { label: "Montant attribue (CDF)", value: formatAmount(data.total_awarded_amount_cdf, "CDF") },
         ]} />}
       </StateBlock>
     </>

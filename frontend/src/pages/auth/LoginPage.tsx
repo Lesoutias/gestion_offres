@@ -7,7 +7,7 @@ import { Input } from "../../components/ui/Input";
 import type { UserRole } from "../../types";
 
 const redirectByRole: Record<UserRole, string> = {
-  admin: "/admin/dashboard",
+  admin: "/authority/dashboard",
   autorite_publique: "/authority/dashboard",
   entreprise: "/company/dashboard",
   commission_evaluation: "/commission/dashboard",

@@ -12,6 +12,7 @@ class Offer(Base):
     company_id = Column(Integer, ForeignKey("companies.id"), nullable=False)
     submitted_by_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     montant = Column(Float, nullable=False)
+    devise = Column(String(3), nullable=False, default="USD")
     delai_execution = Column(String(100), nullable=True)
     proposition_technique = Column(Text, nullable=True)
     proposition_financiere = Column(Text, nullable=True)

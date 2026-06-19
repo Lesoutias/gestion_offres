@@ -29,42 +29,27 @@ function isPathActive(pathname: string, to: string): boolean {
   return rest !== "create" && !rest.startsWith("create/");
 }
 
+const mairieNav: NavEntry[] = [
+  { label: "Dashboard", to: "/authority/dashboard" },
+  { label: "Utilisateurs", to: "/admin/users" },
+  { label: "Roles et permissions", to: "/admin/roles-permissions" },
+  { label: "Entreprises", to: "/admin/companies" },
+  { label: "Autorites publiques", to: "/admin/public-authorities" },
+  {
+    label: "Offres",
+    items: [
+      { label: "Appels d'offres", to: "/authority/tender-calls" },
+      { label: "Creer un appel", to: "/authority/tender-calls/create" },
+    ],
+  },
+  { label: "Contrats", to: "/authority/contracts" },
+  { label: "Executions", to: "/authority/executions" },
+  { label: "Audit", to: "/admin/audit-logs" },
+];
+
 const navByRole: Record<UserRole, NavEntry[]> = {
-  admin: [
-    { label: "Dashboard", to: "/admin/dashboard" },
-    { label: "Utilisateurs", to: "/admin/users" },
-    { label: "Roles et permissions", to: "/admin/roles-permissions" },
-    { label: "Entreprises", to: "/admin/companies" },
-    { label: "Autorites publiques", to: "/admin/public-authorities" },
-    {
-      label: "Offres",
-      items: [
-        { label: "Appels d'offres", to: "/admin/tender-calls" },
-        { label: "Creer un appel", to: "/authority/tender-calls/create" },
-      ],
-    },
-    { label: "Offres recues", to: "/admin/offers" },
-    { label: "Marches publics", to: "/admin/public-contracts" },
-    { label: "Audit", to: "/admin/audit-logs" },
-  ],
-  autorite_publique: [
-    { label: "Dashboard", to: "/authority/dashboard" },
-    { label: "Admin global", to: "/admin/dashboard" },
-    { label: "Utilisateurs", to: "/admin/users" },
-    { label: "Roles et permissions", to: "/admin/roles-permissions" },
-    { label: "Entreprises", to: "/admin/companies" },
-    { label: "Autorites publiques", to: "/admin/public-authorities" },
-    {
-      label: "Offres",
-      items: [
-        { label: "Appels d'offres", to: "/authority/tender-calls" },
-        { label: "Creer un appel", to: "/authority/tender-calls/create" },
-      ],
-    },
-    { label: "Contrats", to: "/authority/contracts" },
-    { label: "Executions", to: "/authority/executions" },
-    { label: "Audit", to: "/admin/audit-logs" },
-  ],
+  admin: mairieNav,
+  autorite_publique: mairieNav,
   entreprise: [
     { label: "Dashboard", to: "/company/dashboard" },
     { label: "Profil", to: "/company/profile" },

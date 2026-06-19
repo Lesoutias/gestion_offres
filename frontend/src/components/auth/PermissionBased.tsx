@@ -9,7 +9,7 @@ interface PermissionBasedProps {
 export function PermissionBased({ permission, children }: PermissionBasedProps) {
   const user = useAppSelector((state) => state.auth.user);
   const permissions = user?.role?.permissions?.map((item) => item.name) || [];
-  if (user?.role?.name === "admin" || permissions.includes(permission)) {
+  if (user?.role?.name === "admin" || user?.role?.name === "autorite_publique" || permissions.includes(permission)) {
     return <>{children}</>;
   }
   return null;

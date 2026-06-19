@@ -103,6 +103,7 @@ def award_offer(db: Session, offer_id: int) -> PublicContract:
         offer_id=offer.id,
         authority_id=tender.authority_id,
         montant=offer.montant,
+        devise=offer.devise,
         statut="awarded",
     )
     db.add(public_contract)

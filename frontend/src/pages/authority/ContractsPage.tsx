@@ -8,6 +8,7 @@ import { contractService } from "../../services/contractService";
 import { offerService } from "../../services/offerService";
 import { publicContractService } from "../../services/publicContractService";
 import type { Company, Contract, Offer, PublicContract } from "../../types";
+import { formatAmount } from "../../utils/formatCurrency";
 import { PageTitle, StateBlock } from "../PageHelpers";
 
 function contractStatusLabel(status: Contract["statut"]) {
@@ -200,7 +201,7 @@ export default function ContractsPage() {
                   <tr key={offer.id}>
                     <td className="px-4 py-3">#{offer.id}</td>
                     <td className="px-4 py-3">{company?.name || `Entreprise #${offer.company_id}`}</td>
-                    <td className="px-4 py-3">{offer.montant.toLocaleString()} USD</td>
+                    <td className="px-4 py-3">{formatAmount(offer.montant, offer.devise)}</td>
                     <td className="px-4 py-3">{offerStatusLabel(offer.statut)}</td>
                     <td className="px-4 py-3">
                       {tenderAlreadyAwardedToAnotherOffer

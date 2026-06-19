@@ -1,3 +1,5 @@
+import type { Currency } from "./currency";
+
 export type OfferStatus = "submitted" | "under_review" | "accepted" | "rejected" | "awarded";
 
 export interface Offer {
@@ -6,6 +8,7 @@ export interface Offer {
   company_id: number;
   submitted_by_id: number;
   montant: number;
+  devise: Currency;
   delai_execution?: string | null;
   proposition_technique?: string | null;
   proposition_financiere?: string | null;
@@ -22,6 +25,7 @@ export interface OfferCreate {
   tender_call_id: number;
   company_id: number;
   montant: number;
+  devise: Currency;
   delai_execution?: string;
   proposition_technique?: string;
   proposition_financiere?: string;

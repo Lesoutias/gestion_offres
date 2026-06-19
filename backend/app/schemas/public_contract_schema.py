@@ -20,6 +20,7 @@ class PublicContractBase(BaseModel):
     offer_id: int
     authority_id: int
     montant: float = Field(..., ge=0)
+    devise: Literal["CDF", "USD"] = "USD"
 
 
 class PublicContractCreate(PublicContractBase):

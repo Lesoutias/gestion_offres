@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models.user import User
 from ..schemas.contract_schema import ContractCreate, ContractRead, ContractUpdate
-from ..security.permissions import ADMIN, AUTORITE_PUBLIQUE, ENTREPRISE, require_roles
+from ..security.permissions import ADMIN, AUTORITE_PUBLIQUE, ENTREPRISE, MAIRIE_ROLES, require_roles
 from ..services import company_service, contract_service
 from ..services.audit_log_service import log_action
 from ..services.file_upload_service import FileUploadService
@@ -44,7 +44,7 @@ def get_contract(contract_id: int, db: Session = Depends(get_db), current_user: 
     if current_user.role.name == ENTREPRISE:
         company = company_service.get_my_company(db, current_user.id)
         if contract.public_contract.company_id != company.id:
-            require_roles(current_user, [ADMIN])
+            require_roles(current_user, MAIRIE_ROLES)
     else:
         require_roles(current_user, [ADMIN, AUTORITE_PUBLIQUE])
     return contract
@@ -91,7 +91,7 @@ def accept_contract(contract_id: int, db: Session = Depends(get_db), current_use
     company = company_service.get_my_company(db, current_user.id)
     contract = contract_service.get_contract(db, contract_id)
     if contract.public_contract.company_id != company.id:
-        require_roles(current_user, [ADMIN])
+        require_roles(current_user, MAIRIE_ROLES)
     contract = contract_service.accept_contract(db, contract_id)
     log_action(db, current_user.id, "contract.accept", "Contract", contract.id)
     return contract
@@ -103,7 +103,7 @@ def reject_contract(contract_id: int, db: Session = Depends(get_db), current_use
     company = company_service.get_my_company(db, current_user.id)
     contract = contract_service.get_contract(db, contract_id)
     if contract.public_contract.company_id != company.id:
-        require_roles(current_user, [ADMIN])
+        require_roles(current_user, MAIRIE_ROLES)
     contract = contract_service.reject_contract(db, contract_id)
     log_action(db, current_user.id, "contract.reject", "Contract", contract.id)
     return contract

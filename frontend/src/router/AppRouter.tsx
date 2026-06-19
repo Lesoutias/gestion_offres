@@ -1,17 +1,13 @@
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import ProtectedRoute from "../components/auth/ProtectedRoute";
 import RoleBasedRoute from "../components/auth/RoleBasedRoute";
 import DashboardLayout from "../components/layout/DashboardLayout";
 import LoginPage from "../pages/auth/LoginPage";
 import RegisterCompanyPage from "../pages/auth/RegisterCompanyPage";
-import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
 import UsersPage from "../pages/admin/UsersPage";
 import RolesPermissionsPage from "../pages/admin/RolesPermissionsPage";
 import CompaniesPage from "../pages/admin/CompaniesPage";
 import PublicAuthoritiesPage from "../pages/admin/PublicAuthoritiesPage";
-import AllTenderCallsPage from "../pages/admin/AllTenderCallsPage";
-import AllOffersPage from "../pages/admin/AllOffersPage";
-import PublicContractsPage from "../pages/admin/PublicContractsPage";
 import AuditLogsPage from "../pages/admin/AuditLogsPage";
 import AuthorityDashboardPage from "../pages/authority/AuthorityDashboardPage";
 import CreateTenderCallPage from "../pages/authority/CreateTenderCallPage";
@@ -57,66 +53,25 @@ export default function AppRouter() {
           <Route
             element={<RoleBasedRoute roles={["admin", "autorite_publique"]} />}
           >
-            <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+            <Route path="/authority/dashboard" element={<AuthorityDashboardPage />} />
             <Route path="/admin/users" element={<UsersPage />} />
-            <Route
-              path="/admin/roles-permissions"
-              element={<RolesPermissionsPage />}
-            />
+            <Route path="/admin/roles-permissions" element={<RolesPermissionsPage />} />
             <Route path="/admin/companies" element={<CompaniesPage />} />
-            <Route
-              path="/admin/public-authorities"
-              element={<PublicAuthoritiesPage />}
-            />
-            <Route
-              path="/admin/tender-calls"
-              element={<AllTenderCallsPage />}
-            />
-            <Route path="/admin/offers" element={<AllOffersPage />} />
-            <Route
-              path="/admin/public-contracts"
-              element={<PublicContractsPage />}
-            />
+            <Route path="/admin/public-authorities" element={<PublicAuthoritiesPage />} />
             <Route path="/admin/audit-logs" element={<AuditLogsPage />} />
-          </Route>
-
-          <Route
-            element={<RoleBasedRoute roles={["autorite_publique", "admin"]} />}
-          >
-            <Route
-              path="/authority/dashboard"
-              element={<AuthorityDashboardPage />}
-            />
-            <Route
-              path="/authority/tender-calls/create"
-              element={<CreateTenderCallPage />}
-            />
-            <Route
-              path="/authority/tender-calls"
-              element={<MyTenderCallsPage />}
-            />
-            <Route
-              path="/authority/tender-calls/:id"
-              element={<AuthorityTenderCallDetailsPage />}
-            />
-            <Route
-              path="/authority/tender-calls/:id/dao"
-              element={<DaoDocumentPage />}
-            />
-            <Route
-              path="/authority/tender-calls/:id/offers"
-              element={<TenderOffersPage />}
-            />
-            <Route
-              path="/authority/tender-calls/:id/evaluation"
-              element={<EvaluateOffersPage />}
-            />
-            <Route
-              path="/authority/tender-calls/:id/award"
-              element={<AwardMarketPage />}
-            />
+            <Route path="/authority/tender-calls/create" element={<CreateTenderCallPage />} />
+            <Route path="/authority/tender-calls" element={<MyTenderCallsPage />} />
+            <Route path="/authority/tender-calls/:id" element={<AuthorityTenderCallDetailsPage />} />
+            <Route path="/authority/tender-calls/:id/dao" element={<DaoDocumentPage />} />
+            <Route path="/authority/tender-calls/:id/offers" element={<TenderOffersPage />} />
+            <Route path="/authority/tender-calls/:id/evaluation" element={<EvaluateOffersPage />} />
+            <Route path="/authority/tender-calls/:id/award" element={<AwardMarketPage />} />
             <Route path="/authority/contracts" element={<ContractsPage />} />
             <Route path="/authority/executions" element={<ExecutionsPage />} />
+            <Route path="/admin/dashboard" element={<Navigate to="/authority/dashboard" replace />} />
+            <Route path="/admin/tender-calls" element={<Navigate to="/authority/tender-calls" replace />} />
+            <Route path="/admin/offers" element={<Navigate to="/authority/tender-calls" replace />} />
+            <Route path="/admin/public-contracts" element={<Navigate to="/authority/contracts" replace />} />
           </Route>
 
           <Route element={<RoleBasedRoute roles={["entreprise"]} />}>
@@ -155,14 +110,8 @@ export default function AppRouter() {
               path="/commission/tender-calls"
               element={<EvaluationTenderCallsPage />}
             />
-            <Route
-              path="/commission/tender-calls/:id/offers"
-              element={<EvaluationOffersPage />}
-            />
-            <Route
-              path="/commission/offers/:id/evaluate"
-              element={<EvaluationOffersPage />}
-            />
+            <Route path="/commission/tender-calls/:tenderCallId/offers" element={<EvaluationOffersPage />} />
+            <Route path="/commission/offers/:offerId/evaluate" element={<EvaluationOffersPage />} />
           </Route>
         </Route>
       </Route>

@@ -1,3 +1,5 @@
+import type { Currency } from "./currency";
+
 export type PublicContractStatus =
   | "awarded"
   | "contract_pending"
@@ -14,6 +16,7 @@ export interface PublicContract {
   offer_id: number;
   authority_id: number;
   montant: number;
+  devise: Currency;
   statut: PublicContractStatus;
   date_attribution: string;
   created_at: string;
@@ -26,4 +29,5 @@ export interface PublicContractCreate {
   offer_id: number;
   authority_id: number;
   montant: number;
+  devise: Currency;
 }

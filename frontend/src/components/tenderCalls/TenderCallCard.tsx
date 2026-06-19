@@ -14,6 +14,16 @@ export function TenderCallCard({
   onStartEvaluation?: (tenderId: number) => void | Promise<void>;
 }) {
   const canStartEvaluation = tender.statut === "published" || tender.statut === "closed";
+  const offersLink =
+    to.includes("/authority/tender-calls/")
+      ? `/authority/tender-calls/${tender.id}/offers`
+      : to.includes("/commission/tender-calls/")
+        ? `/commission/tender-calls/${tender.id}/offers`
+        : null;
+  const showOffersLink =
+    offersLink &&
+    offersLink !== to &&
+    (tender.statut === "published" || tender.statut === "closed" || tender.statut === "evaluation");
 
   return (
     <Card>
@@ -36,8 +46,8 @@ export function TenderCallCard({
               Lancer Evaluation
             </Button>
           )}
-          {(tender.statut === "published" || tender.statut === "closed" || tender.statut === "evaluation") && (
-            <Link to={`/authority/tender-calls/${tender.id}/offers`}>
+          {showOffersLink && (
+            <Link to={offersLink}>
               <Button variant="ghost">Offres</Button>
             </Link>
           )}

@@ -27,7 +27,7 @@ def list_published_tender_calls(db: Session) -> list[TenderCall]:
 def list_tender_calls_for_evaluation(db: Session) -> list[TenderCall]:
     return (
         db.query(TenderCall)
-        .filter(TenderCall.statut.in_(["evaluation", "closed"]))
+        .filter(TenderCall.statut == "evaluation")
         .order_by(TenderCall.created_at.desc())
         .all()
     )
