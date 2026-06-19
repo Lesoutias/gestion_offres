@@ -4,10 +4,46 @@ import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import { Select } from "../ui/Select";
 
-export function EvaluationForm({ offerId, onSubmit }: { offerId: number; onSubmit: (payload: OfferEvaluationCreate) => void | Promise<void> }) {
-  const [form, setForm] = useState<OfferEvaluationCreate>({ offer_id: offerId, technical_score: 0, financial_score: 0, recommendation: "reserve" });
+export function EvaluationForm({
+  offerId,
+  onSubmit,
+}: {
+  offerId: number;
+  onSubmit: (payload: OfferEvaluationCreate) => void | Promise<void>;
+}) {
+  const [form, setForm] = useState<OfferEvaluationCreate>({
+    offer_id: offerId,
+    technical_score: 0,
+    financial_score: 0,
+    recommendation: "reserve",
+  });
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    try {
+      setSaving(true);
+      setError(null);
+      await onSubmit(form);
+      const outcome =
+        form.recommendation === "favorable"
+          ? "L'offre est marquee comme conforme (evaluation positive)."
+          : form.recommendation === "unfavorable"
+            ? "L'offre est marquee comme non conforme (evaluation negative)."
+            : "L'offre reste en analyse (conforme avec reserves).";
+      setMessage(outcome);
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      setError(detail || "Enregistrement impossible");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
-    <form onSubmit={(e: FormEvent) => { e.preventDefault(); onSubmit(form); }} className="grid gap-4">
+    <form onSubmit={handleSubmit} className="grid gap-4">
       <Input label="Score technique" type="number" value={form.technical_score} onChange={(e) => setForm({ ...form, technical_score: Number(e.target.value) })} />
       <Input label="Score financier" type="number" value={form.financial_score} onChange={(e) => setForm({ ...form, financial_score: Number(e.target.value) })} />
       <Select
@@ -15,8 +51,8 @@ export function EvaluationForm({ offerId, onSubmit }: { offerId: number; onSubmi
         value={form.recommendation}
         onChange={(e) => setForm({ ...form, recommendation: e.target.value as EvaluationRecommendation })}
         options={[
-          { label: "Conforme", value: "favorable" },
-          { label: "Non conforme", value: "unfavorable" },
+          { label: "Conforme (evaluation positive)", value: "favorable" },
+          { label: "Non conforme (evaluation negative)", value: "unfavorable" },
           { label: "Conforme avec reserves", value: "reserve" },
         ]}
       />
@@ -24,7 +60,9 @@ export function EvaluationForm({ offerId, onSubmit }: { offerId: number; onSubmi
         <span className="mb-1 block text-sm font-medium text-slate-700">Rapport / commentaire</span>
         <textarea className="min-h-24 w-full rounded-md border border-slate-300 p-3 text-sm" value={form.comment || ""} onChange={(e) => setForm({ ...form, comment: e.target.value })} />
       </label>
-      <Button type="submit">Enregistrer l'evaluation</Button>
+      {error && <p className="text-sm text-red-700">{error}</p>}
+      {message && <p className="text-sm text-emerald-700">{message}</p>}
+      <Button type="submit" disabled={saving}>{saving ? "Enregistrement..." : "Enregistrer l'evaluation"}</Button>
     </form>
   );
 }

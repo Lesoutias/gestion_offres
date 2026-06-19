@@ -3,7 +3,26 @@ from sqlalchemy.orm import Session
 
 from ..models.offer import Offer
 from ..models.offer_evaluation import OfferEvaluation
+from ..models.tender_call import TenderCall
 from ..schemas.offer_evaluation_schema import OfferEvaluationCreate, OfferEvaluationUpdate
+
+
+def _ensure_tender_in_evaluation(db: Session, offer: Offer) -> None:
+    tender = db.query(TenderCall).filter(TenderCall.id == offer.tender_call_id).first()
+    if not tender or tender.statut != "evaluation":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="L'appel d'offres doit etre en phase d'evaluation",
+        )
+
+
+def _apply_evaluation_outcome(offer: Offer, recommendation: str) -> None:
+    if recommendation == "favorable":
+        offer.statut = "accepted"
+    elif recommendation == "unfavorable":
+        offer.statut = "rejected"
+    else:
+        offer.statut = "under_review"
 
 
 def _recalculate_offer_scores(db: Session, offer_id: int) -> None:
@@ -14,14 +33,15 @@ def _recalculate_offer_scores(db: Session, offer_id: int) -> None:
     offer.score_technique = sum(e.technical_score for e in evaluations) / len(evaluations)
     offer.score_financier = sum(e.financial_score for e in evaluations) / len(evaluations)
     offer.score_total = offer.score_technique + offer.score_financier
-    if offer.statut == "submitted":
-        offer.statut = "under_review"
+    latest = max(evaluations, key=lambda item: item.created_at)
+    _apply_evaluation_outcome(offer, latest.recommendation)
 
 
 def create_offer_evaluation(db: Session, data: OfferEvaluationCreate, evaluator_id: int) -> OfferEvaluation:
     offer = db.query(Offer).filter(Offer.id == data.offer_id).first()
     if not offer:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Offre introuvable")
+    _ensure_tender_in_evaluation(db, offer)
     evaluation = OfferEvaluation(
         offer_id=data.offer_id,
         evaluator_id=evaluator_id,

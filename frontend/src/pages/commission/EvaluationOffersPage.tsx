@@ -1,4 +1,4 @@
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { EvaluationForm } from "../../components/evaluations/EvaluationForm";
 import { OfferCard } from "../../components/offers/OfferCard";
 import { Button } from "../../components/ui/Button";
@@ -8,6 +8,7 @@ import { offerService } from "../../services/offerService";
 import { PageTitle, StateBlock, useAsyncData } from "../PageHelpers";
 
 export default function EvaluationOffersPage() {
+  const navigate = useNavigate();
   const tenderCallId = Number(useParams().id);
   const offerId = Number(useParams().id);
   const evaluatingSingle = window.location.pathname.includes("/commission/offers/");
@@ -26,6 +27,9 @@ export default function EvaluationOffersPage() {
                   offerId={singleOffer.data.id}
                   onSubmit={async (payload) => {
                     await offerEvaluationService.create(payload);
+                    setTimeout(() => {
+                      navigate(`/commission/tender-calls/${singleOffer.data!.tender_call_id}/offers`);
+                    }, 1500);
                   }}
                 />
               </Card>

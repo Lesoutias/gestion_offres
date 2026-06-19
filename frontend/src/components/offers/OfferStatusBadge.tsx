@@ -4,8 +4,8 @@ import { Badge } from "../ui/Badge";
 const labels: Record<OfferStatus, string> = {
   submitted: "Soumise",
   under_review: "En analyse",
-  accepted: "Acceptee",
-  rejected: "Rejetee",
+  accepted: "Conforme",
+  rejected: "Non conforme",
   awarded: "Gagnante",
 };
 
