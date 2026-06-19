@@ -35,8 +35,10 @@ def list_public_contracts(db: Session = Depends(get_db), current_user: User = De
 @router.get("/me", response_model=List[PublicContractRead])
 def get_my_public_contracts(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     require_roles(current_user, [ENTREPRISE])
-    company = company_service.get_my_company(db, current_user.id)
-    return public_contract_service.list_company_public_contracts(db, company.id)
+    company_id = company_service.get_my_company_id(db, current_user.id)
+    if not company_id:
+        return []
+    return public_contract_service.list_company_public_contracts(db, company_id)
 
 
 @router.get("/{public_contract_id}", response_model=PublicContractRead)

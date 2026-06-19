@@ -35,5 +35,7 @@ def authority_stats(db: Session = Depends(get_db), current_user: User = Depends(
 @router.get("/company/stats", response_model=CompanyDashboardStats)
 def company_stats(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     require_roles(current_user, [ENTREPRISE])
-    company = company_service.get_my_company(db, current_user.id)
+    company = company_service.find_company_by_owner(db, current_user.id)
+    if not company:
+        return CompanyDashboardStats()
     return dashboard_service.get_company_stats(db, company.id)

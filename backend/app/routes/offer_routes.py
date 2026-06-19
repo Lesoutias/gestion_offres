@@ -29,8 +29,10 @@ def submit_offer(data: OfferCreate, db: Session = Depends(get_db), current_user:
 @router.get("/me", response_model=List[OfferRead])
 def get_my_offers(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     require_roles(current_user, [ENTREPRISE])
-    company = company_service.get_my_company(db, current_user.id)
-    return offer_service.list_my_offers(db, company.id)
+    company_id = company_service.get_my_company_id(db, current_user.id)
+    if not company_id:
+        return []
+    return offer_service.list_my_offers(db, company_id)
 
 
 @router.get("/tender/{tender_call_id}", response_model=List[OfferRead])

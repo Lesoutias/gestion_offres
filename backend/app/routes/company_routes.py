@@ -41,7 +41,14 @@ def get_company(company_id: int, db: Session = Depends(get_db), current_user: Us
 def create_company(data: CompanyCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     require_roles(current_user, [*MAIRIE_ROLES, ENTREPRISE])
     if current_user.role.name == ENTREPRISE:
+        if company_service.find_company_by_owner(db, current_user.id):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Profil entreprise deja existant",
+            )
         data.owner_id = current_user.id
+    elif data.owner_id is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="owner_id requis")
     company = company_service.create_company(db, data)
     log_action(db, current_user.id, "company.create", "Company", company.id)
     return company

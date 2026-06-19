@@ -16,8 +16,17 @@ def get_company(db: Session, company_id: int) -> Company:
     return company
 
 
+def find_company_by_owner(db: Session, owner_id: int) -> Company | None:
+    return db.query(Company).filter(Company.owner_id == owner_id).first()
+
+
+def get_my_company_id(db: Session, owner_id: int) -> int | None:
+    company = find_company_by_owner(db, owner_id)
+    return company.id if company else None
+
+
 def get_my_company(db: Session, owner_id: int) -> Company:
-    company = db.query(Company).filter(Company.owner_id == owner_id).first()
+    company = find_company_by_owner(db, owner_id)
     if not company:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Profil entreprise introuvable")
     return company

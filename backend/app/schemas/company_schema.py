@@ -16,7 +16,7 @@ class CompanyBase(BaseModel):
 
 
 class CompanyCreate(CompanyBase):
-    owner_id: int
+    owner_id: Optional[int] = None
 
 
 class CompanyUpdate(BaseModel):

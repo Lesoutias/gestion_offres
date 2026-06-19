@@ -34,8 +34,10 @@ def get_contract_by_public_contract(
 @router.get("/me", response_model=list[ContractRead])
 def get_my_contracts(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     require_roles(current_user, [ENTREPRISE])
-    company = company_service.get_my_company(db, current_user.id)
-    return contract_service.list_company_contracts(db, company.id)
+    company_id = company_service.get_my_company_id(db, current_user.id)
+    if not company_id:
+        return []
+    return contract_service.list_company_contracts(db, company_id)
 
 
 @router.get("/{contract_id}", response_model=ContractRead)

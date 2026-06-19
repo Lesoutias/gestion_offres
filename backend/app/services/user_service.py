@@ -25,6 +25,11 @@ def get_user_by_email(db: Session, email: str) -> User | None:
 def create_user(db: Session, data: UserCreate) -> User:
     if get_user_by_email(db, data.email):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email deja utilise")
+    if data.role_name == "entreprise":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Utilisez l'inscription entreprise pour creer un compte entreprise",
+        )
     role = db.query(Role).filter(Role.name == data.role_name).first()
     if not role:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Role invalide")

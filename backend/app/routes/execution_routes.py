@@ -31,8 +31,10 @@ def list_executions(db: Session = Depends(get_db), current_user: User = Depends(
 @router.get("/me", response_model=List[ExecutionRead])
 def get_my_executions(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     require_roles(current_user, [ENTREPRISE])
-    company = company_service.get_my_company(db, current_user.id)
-    return execution_service.list_company_executions(db, company.id)
+    company_id = company_service.get_my_company_id(db, current_user.id)
+    if not company_id:
+        return []
+    return execution_service.list_company_executions(db, company_id)
 
 
 @router.get("/public-contract/{public_contract_id}", response_model=ExecutionRead)

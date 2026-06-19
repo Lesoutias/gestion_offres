@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 
 from .database import SessionLocal
+from .models.company import Company
 from .models.permission import Permission
 from .models.public_authority import PublicAuthority
 from .models.role import Role
@@ -174,6 +175,24 @@ def get_or_create_public_authority(db: Session, user: User) -> PublicAuthority:
     return authority
 
 
+def get_or_create_company(db: Session, user: User, name: str) -> Company:
+    company = db.query(Company).filter(Company.owner_id == user.id).first()
+    if company:
+        company.name = name
+        company.email = company.email or user.email
+        return company
+
+    company = Company(
+        name=name,
+        email=user.email,
+        owner_id=user.id,
+        is_verified=True,
+    )
+    db.add(company)
+    db.flush()
+    return company
+
+
 def seed_database(verbose: bool = True) -> None:
     db = SessionLocal()
     try:
@@ -210,6 +229,15 @@ def seed_database(verbose: bool = True) -> None:
             role=roles["commission_evaluation"],
         )
 
+        enterprise_user = get_or_create_user(
+            db,
+            email="entreprise@demo.cd",
+            full_name="Responsable Entreprise Demo",
+            password="Entreprise@12345",
+            role=roles["entreprise"],
+        )
+        get_or_create_company(db, enterprise_user, "Entreprise Demo Goma")
+
         db.commit()
 
         if verbose:
@@ -217,6 +245,7 @@ def seed_database(verbose: bool = True) -> None:
             print("Admin: admin@mairiegoma.cd / Admin@12345")
             print("Autorite publique: autorite@mairiegoma.cd / Autorite@12345")
             print("Commission evaluation: commission@mairiegoma.cd / Commission@12345")
+            print("Entreprise demo: entreprise@demo.cd / Entreprise@12345")
     except Exception:
         db.rollback()
         raise
