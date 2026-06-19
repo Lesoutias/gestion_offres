@@ -24,6 +24,15 @@ def list_published_tender_calls(db: Session) -> list[TenderCall]:
     )
 
 
+def list_tender_calls_for_evaluation(db: Session) -> list[TenderCall]:
+    return (
+        db.query(TenderCall)
+        .filter(TenderCall.statut.in_(["evaluation", "closed"]))
+        .order_by(TenderCall.created_at.desc())
+        .all()
+    )
+
+
 def get_tender_call(db: Session, tender_call_id: int) -> TenderCall:
     tender = db.query(TenderCall).filter(TenderCall.id == tender_call_id).first()
     if not tender:

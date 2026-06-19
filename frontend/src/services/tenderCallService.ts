@@ -4,6 +4,7 @@ import type { TenderCall, TenderCallCreate, TenderCallUpdate } from "../types";
 export const tenderCallService = {
   getPublished: () => unwrap<TenderCall[]>(api.get("/tender-calls/published")),
   getAll: () => unwrap<TenderCall[]>(api.get("/tender-calls/admin")),
+  getForEvaluation: () => unwrap<TenderCall[]>(api.get("/tender-calls/evaluation")),
   getById: (id: number) => unwrap<TenderCall>(api.get(`/tender-calls/${id}`)),
   create: (payload: TenderCallCreate) => unwrap<TenderCall>(api.post("/tender-calls", payload)),
   update: (id: number, payload: TenderCallUpdate) => unwrap<TenderCall>(api.put(`/tender-calls/${id}`, payload)),

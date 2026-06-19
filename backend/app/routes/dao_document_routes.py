@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models.user import User
 from ..schemas.dao_document_schema import DaoDocumentCreate, DaoDocumentRead, DaoDocumentUpdate
-from ..security.permissions import ADMIN, AUTORITE_PUBLIQUE, ENTREPRISE, require_roles
+from ..security.permissions import ADMIN, AUTORITE_PUBLIQUE, COMMISSION_EVALUATION, ENTREPRISE, require_roles
 from ..services import dao_document_service, tender_call_service
 from ..services.audit_log_service import log_action
 from ..services.file_upload_service import FileUploadService
@@ -31,7 +31,7 @@ def get_dao_by_tender(
     if current_user.role.name == ENTREPRISE and tender.statut != "published":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="DAO non disponible")
     if current_user.role.name not in [ENTREPRISE]:
-        require_roles(current_user, [ADMIN, AUTORITE_PUBLIQUE])
+        require_roles(current_user, [ADMIN, AUTORITE_PUBLIQUE, COMMISSION_EVALUATION])
     return dao_document_service.get_dao_by_tender(db, tender_call_id)
 
 
