@@ -102,10 +102,7 @@ def start_evaluation(db: Session, tender_call_id: int) -> TenderCall:
             detail="Seul un appel publie ou cloture peut etre mis en evaluation",
         )
     if tender.statut == "published" and tender.date_limite > _now():
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="La date limite de soumission n'est pas encore atteinte. Cloturez l'appel ou attendez la date limite.",
-        )
+        tender.statut = "closed"
     tender.statut = "evaluation"
     db.commit()
     db.refresh(tender)

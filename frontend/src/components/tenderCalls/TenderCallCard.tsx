@@ -33,8 +33,13 @@ export function TenderCallCard({
           </Link>
           {canStartEvaluation && onStartEvaluation && (
             <Button variant="secondary" onClick={() => onStartEvaluation(tender.id)}>
-              Mettre en evaluation
+              Lancer Evaluation
             </Button>
+          )}
+          {(tender.statut === "published" || tender.statut === "closed" || tender.statut === "evaluation") && (
+            <Link to={`/authority/tender-calls/${tender.id}/offers`}>
+              <Button variant="ghost">Offres</Button>
+            </Link>
           )}
         </div>
       </div>

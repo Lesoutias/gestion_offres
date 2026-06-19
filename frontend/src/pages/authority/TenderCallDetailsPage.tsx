@@ -89,7 +89,7 @@ export default function TenderCallDetailsPage() {
                       )
                     }
                   >
-                    Mettre en phase d'evaluation
+                    Lancer Evaluation
                   </Button>
                 )}
                 {data.statut === "evaluation" && (
