@@ -40,7 +40,7 @@ export function useAsyncData<T>(loader: () => Promise<T>, deps: unknown[] = []) 
     };
   }, deps);
 
-  return { data, loading, error, setData };
+  return { data, loading, error, setData, setError };
 }
 
 export function StateBlock({ loading, error, children }: { loading: boolean; error?: string | null; children: ReactNode }) {

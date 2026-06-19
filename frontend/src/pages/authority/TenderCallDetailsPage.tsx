@@ -85,12 +85,17 @@ export default function TenderCallDetailsPage() {
                     onClick={() =>
                       handleAction(
                         () => tenderCallService.startEvaluation(data.id),
-                        "Lancer évaluation",
+                        "Mise en evaluation",
                       )
                     }
                   >
-                    Lancer evaluation
+                    Mettre en phase d'evaluation
                   </Button>
+                )}
+                {data.statut === "evaluation" && (
+                  <p className="w-full text-sm text-amber-700">
+                    Cet appel est en phase d'evaluation. La commission peut evaluer les offres recues.
+                  </p>
                 )}
                 <Link to={`/authority/tender-calls/${data.id}/dao`}>
                   <Button variant="secondary">DAO</Button>
