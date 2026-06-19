@@ -11,12 +11,43 @@ export default function CompanyTenderCallDetailsPage() {
   const id = Number(useParams().id);
   const tender = useAsyncData(() => tenderCallService.getById(id), [id]);
   const dao = useAsyncData(() => daoDocumentService.getByTender(id), [id]);
+
   return (
     <>
       <StateBlock loading={tender.loading} error={tender.error}>
-        {tender.data && <><PageTitle title={tender.data.objet} description={tender.data.reference} /><Card><TenderCallStatusBadge status={tender.data.statut} /><p className="mt-4 text-sm text-slate-700">{tender.data.description}</p>{tender.data.statut === "published" && <Link className="mt-5 inline-block" to={`/company/tender-calls/${id}/submit-offer`}><Button>Soumettre une offre</Button></Link>}</Card></>}
+        {tender.data && (
+          <>
+            <PageTitle title={tender.data.objet} description={tender.data.reference} />
+            <Card>
+              <TenderCallStatusBadge status={tender.data.statut} />
+              <p className="mt-4 text-sm text-slate-700">{tender.data.description}</p>
+              {tender.data.statut === "published" && (
+                <Link className="mt-5 inline-block" to={`/company/tender-calls/${id}/submit-offer`}>
+                  <Button>Soumettre une offre</Button>
+                </Link>
+              )}
+              {tender.data.statut === "draft" && (
+                <p className="mt-4 text-sm text-amber-700">
+                  Cet appel est en brouillon. La soumission sera possible apres publication par la mairie.
+                </p>
+              )}
+              {tender.data.statut === "evaluation" && (
+                <p className="mt-4 text-sm text-amber-700">
+                  Cet appel est en phase d'evaluation. Les soumissions sont closes.
+                </p>
+              )}
+              {tender.data.statut === "closed" && (
+                <p className="mt-4 text-sm text-slate-600">
+                  Cet appel est cloture. Les soumissions ne sont plus acceptees.
+                </p>
+              )}
+            </Card>
+          </>
+        )}
       </StateBlock>
-      <div className="mt-6"><DaoDocumentViewer dao={dao.data} /></div>
+      <div className="mt-6">
+        <DaoDocumentViewer dao={dao.data} />
+      </div>
     </>
   );
 }

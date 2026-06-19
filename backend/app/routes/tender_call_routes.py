@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models.user import User
 from ..schemas.tender_call_schema import TenderCallCreate, TenderCallRead, TenderCallUpdate
-from ..security.permissions import ADMIN, AUTORITE_PUBLIQUE, COMMISSION_EVALUATION, require_roles
+from ..security.permissions import ADMIN, AUTORITE_PUBLIQUE, COMMISSION_EVALUATION, ENTREPRISE, require_roles
 from ..services import tender_call_service
 from ..services.audit_log_service import log_action
 from .auth_routes import get_current_user, get_current_user_optional
@@ -38,6 +38,12 @@ def list_published_tender_calls(db: Session = Depends(get_db)):
     return tender_call_service.list_published_tender_calls(db)
 
 
+@router.get("/company", response_model=List[TenderCallRead])
+def list_company_tender_calls(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    require_roles(current_user, [ENTREPRISE])
+    return tender_call_service.list_tender_calls_for_company(db)
+
+
 @router.get("/admin", response_model=List[TenderCallRead])
 def list_all_tender_calls(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     require_roles(current_user, [ADMIN, AUTORITE_PUBLIQUE])
@@ -61,6 +67,10 @@ def get_tender_call(
         return tender
     if not current_user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Appel d'offres introuvable")
+    if current_user.role.name == ENTREPRISE:
+        if not tender_call_service.company_can_view_tender(tender.statut):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acces refuse")
+        return tender
     require_roles(current_user, [ADMIN, AUTORITE_PUBLIQUE, COMMISSION_EVALUATION])
     if current_user.role.name == COMMISSION_EVALUATION and tender.statut not in ["evaluation", "closed"]:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acces refuse")

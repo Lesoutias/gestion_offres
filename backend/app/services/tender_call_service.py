@@ -24,6 +24,20 @@ def list_published_tender_calls(db: Session) -> list[TenderCall]:
     )
 
 
+def list_tender_calls_for_company(db: Session) -> list[TenderCall]:
+    """Appels visibles par les entreprises : publiés, clôturés, en évaluation et brouillons."""
+    return (
+        db.query(TenderCall)
+        .filter(TenderCall.statut.in_(["draft", "published", "closed", "evaluation"]))
+        .order_by(TenderCall.created_at.desc())
+        .all()
+    )
+
+
+def company_can_view_tender(statut: str) -> bool:
+    return statut in {"draft", "published", "closed", "evaluation"}
+
+
 def list_tender_calls_for_evaluation(db: Session) -> list[TenderCall]:
     return (
         db.query(TenderCall)

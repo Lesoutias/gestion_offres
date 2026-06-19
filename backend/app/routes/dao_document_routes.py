@@ -28,9 +28,10 @@ def get_dao_by_tender(
     current_user: User = Depends(get_current_user),
 ):
     tender = tender_call_service.get_tender_call(db, tender_call_id)
-    if current_user.role.name == ENTREPRISE and tender.statut != "published":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="DAO non disponible")
-    if current_user.role.name not in [ENTREPRISE]:
+    if current_user.role.name == ENTREPRISE:
+        if not tender_call_service.company_can_view_tender(tender.statut):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="DAO non disponible")
+    elif current_user.role.name not in [ENTREPRISE]:
         require_roles(current_user, [ADMIN, AUTORITE_PUBLIQUE, COMMISSION_EVALUATION])
     return dao_document_service.get_dao_by_tender(db, tender_call_id)
 

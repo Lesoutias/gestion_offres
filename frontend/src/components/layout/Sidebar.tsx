@@ -53,7 +53,7 @@ const navByRole: Record<UserRole, NavEntry[]> = {
   entreprise: [
     { label: "Dashboard", to: "/company/dashboard" },
     { label: "Profil", to: "/company/profile" },
-    { label: "Appels publies", to: "/company/tender-calls" },
+    { label: "Appels d'offres", to: "/company/tender-calls" },
     { label: "Mes offres", to: "/company/offers" },
     { label: "Mes contrats", to: "/company/public-contracts" },
     { label: "Executions", to: "/company/executions" },
