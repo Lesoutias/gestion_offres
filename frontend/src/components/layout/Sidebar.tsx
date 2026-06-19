@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { useAppSelector } from "../../app/hooks";
 import type { UserRole } from "../../types";
 
@@ -11,15 +11,21 @@ function isGroup(entry: NavEntry): entry is NavGroup {
   return "items" in entry;
 }
 
+function normalizePath(pathname: string): string {
+  return pathname.length > 1 && pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
+}
+
 function isPathActive(pathname: string, to: string): boolean {
-  if (pathname === to) return true;
-  if (to.endsWith("/create")) {
-    return pathname === to;
+  const current = normalizePath(pathname);
+  const target = normalizePath(to);
+  if (current === target) return true;
+  if (target.endsWith("/create")) {
+    return current === target;
   }
-  if (!pathname.startsWith(`${to}/`)) {
+  if (!current.startsWith(`${target}/`)) {
     return false;
   }
-  const rest = pathname.slice(to.length + 1);
+  const rest = current.slice(target.length + 1);
   return rest !== "create" && !rest.startsWith("create/");
 }
 
@@ -78,9 +84,9 @@ const linkClass = ({ isActive }: { isActive: boolean }) =>
     isActive ? "bg-emerald-600 text-white" : "text-slate-200 hover:bg-slate-800"
   }`;
 
-const subLinkClass = ({ isActive }: { isActive: boolean }) =>
+const subLinkClass = (active: boolean) =>
   `block rounded-md py-2 pl-3 pr-2 text-sm transition ${
-    isActive ? "bg-emerald-600 text-white" : "text-slate-300 hover:bg-slate-800 hover:text-white"
+    active ? "bg-emerald-600 text-white" : "text-slate-300 hover:bg-slate-800 hover:text-white"
   }`;
 
 function NavGroupSection({
@@ -103,8 +109,8 @@ function NavGroupSection({
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-sm transition ${
-          isChildActive ? "bg-slate-800 text-white" : "text-slate-200 hover:bg-slate-800"
+        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-sm transition text-slate-200 hover:bg-slate-800 ${
+          open ? "bg-slate-900" : ""
         }`}
         aria-expanded={open}
       >
@@ -113,17 +119,19 @@ function NavGroupSection({
       </button>
       {open && (
         <div className="ml-3 mt-1 space-y-1 border-l border-slate-700 pl-2">
-          {group.items.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={subLinkClass}
-              onClick={onNavigate}
-              isActive={({ pathname }) => isPathActive(pathname, item.to)}
-            >
-              {item.label}
-            </NavLink>
-          ))}
+          {group.items.map((item) => {
+            const active = isPathActive(location.pathname, item.to);
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                className={subLinkClass(active)}
+                onClick={onNavigate}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>
