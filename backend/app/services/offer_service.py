@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
+from ..models.dao_document import DaoDocument
 from ..models.offer import Offer
 from ..models.public_contract import PublicContract
 from ..models.tender_call import TenderCall
@@ -60,6 +61,37 @@ def get_offer(db: Session, offer_id: int) -> Offer:
     if not offer:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Offre introuvable")
     return offer
+
+
+def get_dao_required_document_types(db: Session, tender_call_id: int) -> list[str]:
+    dao = db.query(DaoDocument).filter(DaoDocument.tender_call_id == tender_call_id).first()
+    if not dao or not dao.required_document_types:
+        return []
+    return list(dao.required_document_types)
+
+
+def check_offer_documents(db: Session, offer_id: int) -> dict:
+    offer = get_offer(db, offer_id)
+    required = get_dao_required_document_types(db, offer.tender_call_id)
+    uploaded = {document.document_type for document in offer.documents}
+    missing = [document_type for document_type in required if document_type not in uploaded]
+    return {
+        "valid": len(missing) == 0,
+        "required": required,
+        "uploaded": sorted(uploaded),
+        "missing": missing,
+    }
+
+
+def validate_offer_documents(db: Session, offer_id: int) -> dict:
+    result = check_offer_documents(db, offer_id)
+    if not result["valid"]:
+        missing = ", ".join(result["missing"])
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Documents manquants: {missing}",
+        )
+    return result
 
 
 def update_offer(db: Session, offer_id: int, data: OfferUpdate) -> Offer:

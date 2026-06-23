@@ -5,6 +5,7 @@ from ..models.offer import Offer
 from ..models.offer_evaluation import OfferEvaluation
 from ..models.tender_call import TenderCall
 from ..schemas.offer_evaluation_schema import OfferEvaluationCreate, OfferEvaluationUpdate
+from . import offer_scoring_service
 
 
 def _ensure_tender_in_evaluation(db: Session, offer: Offer) -> None:
@@ -25,34 +26,23 @@ def _apply_evaluation_outcome(offer: Offer, recommendation: str) -> None:
         offer.statut = "under_review"
 
 
-def _recalculate_offer_scores(db: Session, offer_id: int) -> None:
-    evaluations = db.query(OfferEvaluation).filter(OfferEvaluation.offer_id == offer_id).all()
-    offer = db.query(Offer).filter(Offer.id == offer_id).first()
-    if not offer or not evaluations:
-        return
-    offer.score_technique = sum(e.technical_score for e in evaluations) / len(evaluations)
-    offer.score_financier = sum(e.financial_score for e in evaluations) / len(evaluations)
-    offer.score_total = offer.score_technique + offer.score_financier
-    latest = max(evaluations, key=lambda item: item.created_at)
-    _apply_evaluation_outcome(offer, latest.recommendation)
-
-
 def create_offer_evaluation(db: Session, data: OfferEvaluationCreate, evaluator_id: int) -> OfferEvaluation:
     offer = db.query(Offer).filter(Offer.id == data.offer_id).first()
     if not offer:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Offre introuvable")
     _ensure_tender_in_evaluation(db, offer)
+    offer_scoring_service.recalculate_tender_offer_scores(db, offer.tender_call_id)
+    db.refresh(offer)
     evaluation = OfferEvaluation(
         offer_id=data.offer_id,
         evaluator_id=evaluator_id,
-        technical_score=data.technical_score,
-        financial_score=data.financial_score,
+        technical_score=offer.score_technique or 0,
+        financial_score=offer.score_financier or 0,
         comment=data.comment,
         recommendation=data.recommendation,
     )
     db.add(evaluation)
-    db.flush()
-    _recalculate_offer_scores(db, data.offer_id)
+    _apply_evaluation_outcome(offer, data.recommendation)
     db.commit()
     db.refresh(evaluation)
     return evaluation
@@ -83,7 +73,14 @@ def update_offer_evaluation(db: Session, evaluation_id: int, data: OfferEvaluati
     evaluation = get_offer_evaluation(db, evaluation_id)
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(evaluation, field, value)
-    _recalculate_offer_scores(db, evaluation.offer_id)
+    offer = db.query(Offer).filter(Offer.id == evaluation.offer_id).first()
+    if offer:
+        offer_scoring_service.recalculate_tender_offer_scores(db, offer.tender_call_id)
+        db.refresh(offer)
+        evaluation.technical_score = offer.score_technique or 0
+        evaluation.financial_score = offer.score_financier or 0
+        if data.recommendation is not None:
+            _apply_evaluation_outcome(offer, data.recommendation)
     db.commit()
     db.refresh(evaluation)
     return evaluation
@@ -93,5 +90,7 @@ def delete_offer_evaluation(db: Session, evaluation_id: int) -> None:
     evaluation = get_offer_evaluation(db, evaluation_id)
     offer_id = evaluation.offer_id
     db.delete(evaluation)
-    _recalculate_offer_scores(db, offer_id)
+    offer = db.query(Offer).filter(Offer.id == offer_id).first()
+    if offer:
+        offer_scoring_service.recalculate_tender_offer_scores(db, offer.tender_call_id)
     db.commit()

@@ -27,7 +27,7 @@ flowchart LR
 |------|------|--------------------------------|
 | **Mairie** (admin / autorité publique) | `admin`, `autorite_publique` | Publier l'appel, recevoir les offres, **lancer l'évaluation**, attribuer le marché |
 | **Entreprise** | `entreprise` | Soumettre une offre tant que l'appel est publié et la date limite non dépassée |
-| **Commission d'évaluation** | `commission_evaluation` | Consulter les offres reçues et saisir le rapport d'évaluation (scores + conformité) |
+| **Commission d'évaluation** | `commission_evaluation` | Consulter les offres reçues et saisir le rapport de conformité (recommandation + commentaire) ; les scores sont calculés automatiquement |
 
 ### Comptes de test (seed)
 
@@ -82,10 +82,14 @@ Après cette étape, l'appel apparaît dans le menu **« Appels à évaluer »**
   3. `/commission/offers/{id}/evaluate` — formulaire d'évaluation d'une offre
 
 - **Données saisies** (`EvaluationForm`) :
-  - score technique (nombre ≥ 0)
-  - score financier (nombre ≥ 0)
-  - conformité au DAO (recommandation)
+  - conformité au DAO (recommandation : favorable / défavorable / avec réserves)
   - rapport / commentaire
+
+- **Scores affichés en lecture seule** (`OfferScoresSummary`) :
+  - score technique, score financier, score total (calculés automatiquement par le backend)
+
+- **Checklist documentaire** (`DocumentComplianceChecklist`) :
+  - pièces requises du DAO vs documents uploadés par l'entreprise
 
 - **API création :** `POST /api/offer-evaluations`
 
@@ -146,17 +150,42 @@ Lors de l'enregistrement d'une évaluation, le statut de l'offre est mis à jour
 
 ## Calcul des scores
 
-Pour chaque offre, le backend recalcule les scores après chaque création, modification ou suppression d'évaluation :
+Les scores sont **calculés automatiquement** par le backend (`offer_scoring_service.py`), puis recalculés pour toutes les offres de l'appel à chaque évaluation.
+
+### Score technique (conformité documentaire DAO)
 
 ```
-score_technique  = moyenne des technical_score de toutes les évaluations
-score_financier  = moyenne des financial_score de toutes les évaluations
-score_total      = score_technique + score_financier
+score_technique = (nb_types_requis_fournis / nb_types_requis_DAO) × 100
 ```
 
-Fichier : `backend/app/services/offer_evaluation_service.py` → `_recalculate_offer_scores`
+- Basé sur `dao_documents.required_document_types` vs `offer_documents.document_type`.
+- Si aucune pièce requise n'est définie dans le DAO : score technique = **100**.
 
-Plusieurs membres de la commission peuvent évaluer la même offre ; les scores sont **moyennés**, mais le statut final suit la **recommandation la plus récente**.
+### Score financier (moins-disant, par devise)
+
+```
+score_financier = (montant_min_de_la_devise / montant_offre) × 100
+```
+
+- Comparaison uniquement entre offres du même appel et de la même devise (CDF et USD séparés).
+- Si une seule offre dans une devise : score = **100**.
+- Recalcul de **toutes** les offres de l'appel à chaque évaluation (classement relatif).
+
+### Score total
+
+```
+score_total = score_technique + score_financier
+```
+
+### Historique des évaluations
+
+Lors de l'enregistrement d'une évaluation, les scores calculés au moment de l'évaluation sont stockés dans `offer_evaluations.technical_score` et `financial_score` à titre d'historique. Le score affiché sur l'offre (`offers.score_*`) reflète toujours le **dernier recalcul**.
+
+### Recalcul manuel (mairie)
+
+`POST /api/offer-evaluations/tender/{tender_call_id}/recalculate-scores` — force le recalcul sans nouvelle évaluation.
+
+Voir aussi : [soumission-offre.md](./soumission-offre.md) pour la définition des pièces DAO.
 
 ---
 
@@ -188,7 +217,14 @@ Rôle `commission_evaluation` — permissions seed :
 |--------|----------|
 | Lancer l'évaluation | `PATCH /api/tender-calls/{id}/start-evaluation` |
 | Attribuer le marché | `PATCH /api/offers/{id}/award` |
+| Recalcul des scores | `POST /api/offer-evaluations/tender/{tender_call_id}/recalculate-scores` |
 | Publier / clôturer | `PATCH /api/tender-calls/{id}/publish` / `close` |
+
+### Page d'accueil publique
+
+| Page | Route | Action |
+|------|-------|--------|
+| Accueil | `/` | Liste des appels publiés ouverts (date limite non dépassée) |
 
 ---
 
@@ -209,7 +245,7 @@ Rôle `commission_evaluation` — permissions seed :
 |------|-------|--------|
 | Appels à évaluer | `/commission/tender-calls` | Liste des appels en `evaluation` |
 | Offres à évaluer | `/commission/tender-calls/{id}/offers` | Liste des offres + lien évaluer |
-| Formulaire | `/commission/offers/{id}/evaluate` | Saisie scores et rapport |
+| Formulaire | `/commission/offers/{id}/evaluate` | Conformité, checklist docs, scores auto |
 
 ### Entreprise
 
@@ -291,15 +327,18 @@ sequenceDiagram
 |--------|---------|------|
 | Backend | `app/services/tender_call_service.py` | `start_evaluation`, liste pour commission |
 | Backend | `app/services/offer_service.py` | Soumission et attribution des offres |
-| Backend | `app/services/offer_evaluation_service.py` | Logique d'évaluation et scores |
+| Backend | `app/services/offer_scoring_service.py` | Calcul automatique des scores |
+| Backend | `app/services/offer_evaluation_service.py` | Logique d'évaluation et conformité |
 | Backend | `app/routes/tender_call_routes.py` | Routes appels + start-evaluation |
 | Backend | `app/routes/offer_evaluation_routes.py` | CRUD évaluations |
 | Frontend | `pages/authority/TenderOffersPage.tsx` | Lancer évaluation (mairie) |
 | Frontend | `pages/commission/EvaluationOffersPage.tsx` | Liste et formulaire commission |
 | Frontend | `components/evaluations/EvaluationForm.tsx` | Formulaire de rapport |
+| Frontend | `components/evaluations/EvaluationSummary.tsx` | Scores et checklist documentaire |
+| Frontend | `pages/public/HomePage.tsx` | Appels ouverts sur l'accueil |
 
 ---
 
 ## Résumé en une phrase
 
-> Les entreprises déposent leurs offres sur un appel **publié** ; la mairie **lance l'évaluation** ; la commission **note et juge la conformité** de chaque offre reçue ; la mairie **attribue le marché** à l'offre retenue.
+> Les entreprises déposent leurs offres (avec pièces DAO obligatoires) sur un appel **publié** ; la mairie **lance l'évaluation** ; la commission **juge la conformité** de chaque offre (scores calculés automatiquement) ; la mairie **attribue le marché** à l'offre retenue selon le score total.

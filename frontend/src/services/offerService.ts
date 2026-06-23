@@ -9,4 +9,8 @@ export const offerService = {
   getById: (id: number) => unwrap<Offer>(api.get(`/offers/${id}`)),
   award: (id: number) => unwrap<PublicContract>(api.patch(`/offers/${id}/award`)),
   updateStatus: (id: number, statut: OfferStatus) => unwrap<Offer>(api.patch(`/offers/${id}/status`, { statut })),
+  validateDocuments: (id: number) =>
+    unwrap<{ valid: boolean; required: string[]; uploaded: string[]; missing: string[] }>(
+      api.post(`/offers/${id}/validate-documents`),
+    ),
 };

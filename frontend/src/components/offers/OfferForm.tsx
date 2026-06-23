@@ -5,7 +5,17 @@ import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import { Select } from "../ui/Select";
 
-export function OfferForm({ tenderCallId, companyId, onSubmit }: { tenderCallId: number; companyId: number; onSubmit: (payload: OfferCreate) => void | Promise<void> }) {
+export function OfferForm({
+  tenderCallId,
+  companyId,
+  onSubmit,
+  submitting = false,
+}: {
+  tenderCallId: number;
+  companyId: number;
+  onSubmit: (payload: OfferCreate) => void | Promise<void>;
+  submitting?: boolean;
+}) {
   const [form, setForm] = useState<OfferCreate>({ tender_call_id: tenderCallId, company_id: companyId, montant: 0, devise: "USD" });
   return (
     <form onSubmit={(e: FormEvent) => { e.preventDefault(); onSubmit(form); }} className="grid gap-4">
@@ -22,7 +32,7 @@ export function OfferForm({ tenderCallId, companyId, onSubmit }: { tenderCallId:
         <span className="mb-1 block text-sm font-medium text-slate-700">Proposition financiere</span>
         <textarea className="min-h-28 w-full rounded-md border border-slate-300 p-3 text-sm" value={form.proposition_financiere || ""} onChange={(e) => setForm({ ...form, proposition_financiere: e.target.value })} />
       </label>
-      <Button type="submit">Soumettre l'offre</Button>
+      <Button type="submit" disabled={submitting}>{submitting ? "Soumission..." : "Soumettre l'offre"}</Button>
     </form>
   );
 }

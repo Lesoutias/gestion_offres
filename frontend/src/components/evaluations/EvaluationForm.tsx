@@ -1,7 +1,6 @@
 import { FormEvent, useState } from "react";
 import type { EvaluationRecommendation, OfferEvaluationCreate } from "../../types";
 import { Button } from "../ui/Button";
-import { Input } from "../ui/Input";
 import { Select } from "../ui/Select";
 
 export function EvaluationForm({
@@ -13,8 +12,6 @@ export function EvaluationForm({
 }) {
   const [form, setForm] = useState<OfferEvaluationCreate>({
     offer_id: offerId,
-    technical_score: 0,
-    financial_score: 0,
     recommendation: "reserve",
   });
   const [saving, setSaving] = useState(false);
@@ -44,8 +41,6 @@ export function EvaluationForm({
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-4">
-      <Input label="Score technique" type="number" value={form.technical_score} onChange={(e) => setForm({ ...form, technical_score: Number(e.target.value) })} />
-      <Input label="Score financier" type="number" value={form.financial_score} onChange={(e) => setForm({ ...form, financial_score: Number(e.target.value) })} />
       <Select
         label="Conformite aux conditions du DAO"
         value={form.recommendation}

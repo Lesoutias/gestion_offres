@@ -6,15 +6,10 @@ from pydantic import BaseModel, ConfigDict, Field
 EvaluationRecommendation = Literal["favorable", "unfavorable", "reserve"]
 
 
-class OfferEvaluationBase(BaseModel):
+class OfferEvaluationCreate(BaseModel):
     offer_id: int
-    technical_score: float = Field(..., ge=0)
-    financial_score: float = Field(..., ge=0)
     comment: Optional[str] = None
     recommendation: EvaluationRecommendation
-
-
-class OfferEvaluationCreate(OfferEvaluationBase):
     evaluator_id: Optional[int] = None
 
 
@@ -25,9 +20,11 @@ class OfferEvaluationUpdate(BaseModel):
     recommendation: Optional[EvaluationRecommendation] = None
 
 
-class OfferEvaluationRead(OfferEvaluationBase):
+class OfferEvaluationRead(OfferEvaluationCreate):
     id: int
     evaluator_id: int
+    technical_score: float = Field(..., ge=0)
+    financial_score: float = Field(..., ge=0)
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

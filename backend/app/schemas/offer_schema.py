@@ -57,3 +57,10 @@ class OfferListRead(OfferRead):
 
 class OfferAdminRead(OfferRead):
     pass
+
+
+class OfferDocumentValidationRead(BaseModel):
+    valid: bool
+    required: list[str]
+    uploaded: list[str]
+    missing: list[str]

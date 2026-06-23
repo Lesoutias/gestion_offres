@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..models.user import User
-from ..schemas.offer_schema import OfferCreate, OfferRead, OfferStatusUpdate
+from ..schemas.offer_schema import OfferCreate, OfferDocumentValidationRead, OfferRead, OfferStatusUpdate
 from ..schemas.public_contract_schema import PublicContractRead
 from ..security.permissions import ADMIN, AUTORITE_PUBLIQUE, COMMISSION_EVALUATION, ENTREPRISE, require_roles
 from ..services import company_service, offer_service
@@ -45,6 +45,20 @@ def get_offers_by_tender(tender_call_id: int, db: Session = Depends(get_db), cur
 def get_all_offers(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     require_roles(current_user, [ADMIN, AUTORITE_PUBLIQUE, COMMISSION_EVALUATION])
     return offer_service.list_all_offers(db)
+
+
+@router.post("/{offer_id}/validate-documents", response_model=OfferDocumentValidationRead)
+def validate_offer_documents_route(
+    offer_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    require_roles(current_user, [ENTREPRISE])
+    offer = offer_service.get_offer(db, offer_id)
+    company = company_service.get_my_company(db, current_user.id)
+    if offer.company_id != company.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acces refuse")
+    return offer_service.validate_offer_documents(db, offer_id)
 
 
 @router.get("/{offer_id}", response_model=OfferRead)

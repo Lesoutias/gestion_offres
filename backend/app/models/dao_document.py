@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Text, String, ForeignKey, DateTime, func
+from sqlalchemy import Column, Integer, Text, String, ForeignKey, DateTime, JSON, func
 from sqlalchemy.orm import relationship
 
 from ..database import Base
@@ -13,6 +13,7 @@ class DaoDocument(Base):
     criteres_selection = Column(Text, nullable=True)
     conditions_participation = Column(Text, nullable=True)
     pieces_exigees = Column(Text, nullable=True)
+    required_document_types = Column(JSON, nullable=False, default=list)
     document_url = Column(String(512), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)

@@ -13,10 +13,11 @@ export interface OfferEvaluation {
 
 export interface OfferEvaluationCreate {
   offer_id: number;
-  technical_score: number;
-  financial_score: number;
   comment?: string;
   recommendation: EvaluationRecommendation;
 }
 
-export type OfferEvaluationUpdate = Partial<Omit<OfferEvaluationCreate, "offer_id">>;
+export type OfferEvaluationUpdate = Partial<Omit<OfferEvaluationCreate, "offer_id">> & {
+  technical_score?: number;
+  financial_score?: number;
+};

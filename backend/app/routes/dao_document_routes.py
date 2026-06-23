@@ -8,7 +8,7 @@ from ..security.permissions import ADMIN, AUTORITE_PUBLIQUE, COMMISSION_EVALUATI
 from ..services import dao_document_service, tender_call_service
 from ..services.audit_log_service import log_action
 from ..services.file_upload_service import FileUploadService
-from .auth_routes import get_current_user
+from .auth_routes import get_current_user, get_current_user_optional
 
 router = APIRouter()
 
@@ -25,13 +25,17 @@ def create_dao_document(data: DaoDocumentCreate, db: Session = Depends(get_db), 
 def get_dao_by_tender(
     tender_call_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User | None = Depends(get_current_user_optional),
 ):
     tender = tender_call_service.get_tender_call(db, tender_call_id)
+    if tender.statut == "published":
+        return dao_document_service.get_dao_by_tender(db, tender_call_id)
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Dossier DAO introuvable")
     if current_user.role.name == ENTREPRISE:
         if not tender_call_service.company_can_view_tender(tender.statut):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="DAO non disponible")
-    elif current_user.role.name not in [ENTREPRISE]:
+    else:
         require_roles(current_user, [ADMIN, AUTORITE_PUBLIQUE, COMMISSION_EVALUATION])
     return dao_document_service.get_dao_by_tender(db, tender_call_id)
 

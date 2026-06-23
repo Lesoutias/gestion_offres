@@ -71,7 +71,13 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !isAuthRequest) {
       tokenStorage.clear();
       window.dispatchEvent(new Event("auth:logout"));
-      if (!window.location.pathname.includes("/login")) {
+      const path = window.location.pathname;
+      const isPublicPath =
+        path === "/" ||
+        path === "/login" ||
+        path === "/register-company" ||
+        path.startsWith("/tender-calls");
+      if (!isPublicPath && !path.includes("/login")) {
         window.location.href = "/login";
       }
     }

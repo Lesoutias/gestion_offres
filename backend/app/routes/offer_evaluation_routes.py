@@ -7,7 +7,7 @@ from ..database import get_db
 from ..models.user import User
 from ..schemas.offer_evaluation_schema import OfferEvaluationCreate, OfferEvaluationRead, OfferEvaluationUpdate
 from ..security.permissions import ADMIN, AUTORITE_PUBLIQUE, COMMISSION_EVALUATION, require_roles
-from ..services import offer_evaluation_service
+from ..services import offer_evaluation_service, offer_scoring_service
 from ..services.audit_log_service import log_action
 from .auth_routes import get_current_user
 
@@ -36,6 +36,18 @@ def list_by_offer(offer_id: int, db: Session = Depends(get_db), current_user: Us
 def list_by_tender(tender_call_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     require_roles(current_user, [ADMIN, AUTORITE_PUBLIQUE, COMMISSION_EVALUATION])
     return offer_evaluation_service.list_evaluations_by_tender(db, tender_call_id)
+
+
+@router.post("/tender/{tender_call_id}/recalculate-scores")
+def recalculate_scores(
+    tender_call_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    require_roles(current_user, [ADMIN, AUTORITE_PUBLIQUE])
+    offer_scoring_service.recalculate_tender_offer_scores(db, tender_call_id)
+    db.commit()
+    return {"message": "Scores recalcules"}
 
 
 @router.put("/{evaluation_id}", response_model=OfferEvaluationRead)

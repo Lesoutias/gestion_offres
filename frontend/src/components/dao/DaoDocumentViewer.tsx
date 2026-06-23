@@ -1,4 +1,5 @@
 import type { DaoDocument } from "../../types";
+import { offerDocumentTypeLabel } from "../../utils/offerDocumentTypes";
 import { Card } from "../ui/Card";
 
 export function DaoDocumentViewer({ dao }: { dao?: DaoDocument | null }) {
@@ -18,7 +19,23 @@ export function DaoDocumentViewer({ dao }: { dao?: DaoDocument | null }) {
             <p className="mt-1 whitespace-pre-wrap text-sm text-slate-600">{value || "Non renseigne."}</p>
           </section>
         ))}
-        {dao.document_url && <a className="text-sm font-medium text-emerald-700" href={dao.document_url}>Telecharger le fichier DAO</a>}
+        <section>
+          <h3 className="text-sm font-semibold text-slate-800">Pieces obligatoires</h3>
+          {(dao.required_document_types ?? []).length === 0 ? (
+            <p className="mt-1 text-sm text-slate-600">Aucune piece structuree definie.</p>
+          ) : (
+            <ul className="mt-2 list-inside list-disc text-sm text-slate-700">
+              {dao.required_document_types.map((type) => (
+                <li key={type}>{offerDocumentTypeLabel(type)}</li>
+              ))}
+            </ul>
+          )}
+        </section>
+        {dao.document_url && (
+          <a className="text-sm font-medium text-emerald-700" href={dao.document_url}>
+            Telecharger le fichier DAO
+          </a>
+        )}
       </div>
     </Card>
   );
