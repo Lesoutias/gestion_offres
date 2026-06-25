@@ -44,6 +44,7 @@ const mairieNav: NavEntry[] = [
   },
   { label: "Contrats", to: "/authority/contracts" },
   { label: "Executions", to: "/authority/executions" },
+  { label: "Rapports", to: "/authority/reports" },
   { label: "Audit", to: "/admin/audit-logs" },
 ];
 

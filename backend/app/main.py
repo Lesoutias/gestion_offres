@@ -21,6 +21,7 @@ from .routes.execution_routes import router as execution_router
 from .routes.execution_report_routes import router as execution_report_router
 from .routes.dashboard_routes import router as dashboard_router
 from .routes.audit_log_routes import router as audit_log_router
+from .routes.report_routes import router as report_router
 from .seed_data import seed_database
 
 app = FastAPI(
@@ -59,6 +60,7 @@ app.include_router(execution_router, prefix=f"{settings.API_PREFIX}/executions",
 app.include_router(execution_report_router, prefix=f"{settings.API_PREFIX}/execution-reports", tags=["execution_reports"])
 app.include_router(dashboard_router, prefix=f"{settings.API_PREFIX}/dashboard", tags=["dashboard"])
 app.include_router(audit_log_router, prefix=f"{settings.API_PREFIX}/audit-logs", tags=["audit_logs"])
+app.include_router(report_router, prefix=f"{settings.API_PREFIX}/reports", tags=["reports"])
 
 
 @app.on_event("startup")

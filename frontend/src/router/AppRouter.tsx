@@ -17,6 +17,7 @@ import DaoDocumentPage from "../pages/authority/DaoDocumentPage";
 import TenderOffersPage from "../pages/authority/TenderOffersPage";
 import EvaluateOffersPage from "../pages/authority/EvaluateOffersPage";
 import AwardMarketPage from "../pages/authority/AwardMarketPage";
+import ReportsPage from "../pages/authority/ReportsPage";
 import ContractsPage from "../pages/authority/ContractsPage";
 import ExecutionsPage from "../pages/authority/ExecutionsPage";
 import CompanyDashboardPage from "../pages/company/CompanyDashboardPage";
@@ -68,6 +69,7 @@ export default function AppRouter() {
             <Route path="/authority/tender-calls/:id/award" element={<AwardMarketPage />} />
             <Route path="/authority/contracts" element={<ContractsPage />} />
             <Route path="/authority/executions" element={<ExecutionsPage />} />
+            <Route path="/authority/reports" element={<ReportsPage />} />
             <Route path="/admin/dashboard" element={<Navigate to="/authority/dashboard" replace />} />
             <Route path="/admin/tender-calls" element={<Navigate to="/authority/tender-calls" replace />} />
             <Route path="/admin/offers" element={<Navigate to="/authority/tender-calls" replace />} />
