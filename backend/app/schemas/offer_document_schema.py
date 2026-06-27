@@ -1,17 +1,7 @@
 from datetime import datetime
-from typing import Literal
-
 from pydantic import BaseModel, ConfigDict
 
-OfferDocumentType = Literal[
-    "offre_technique",
-    "offre_financiere",
-    "rccm",
-    "attestation_fiscale",
-    "identification_nationale",
-    "preuve_experience",
-    "autre",
-]
+OfferDocumentType = str
 
 
 class OfferDocumentBase(BaseModel):
@@ -42,3 +32,13 @@ class OfferDocumentRead(OfferDocumentBase):
 
 class OfferDocumentListRead(OfferDocumentRead):
     pass
+
+
+class SubmissionDocumentTypeRead(BaseModel):
+    id: int
+    code: str
+    label: str
+    description: str | None = None
+    display_order: int
+
+    model_config = ConfigDict(from_attributes=True)

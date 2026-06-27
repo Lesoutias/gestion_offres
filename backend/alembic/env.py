@@ -23,6 +23,7 @@ from app.models import (
     public_authority,
     public_contract,
     role,
+    submission_document_type,
     tender_call,
     user,
 )

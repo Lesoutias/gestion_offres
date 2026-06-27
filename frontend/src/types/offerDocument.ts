@@ -1,11 +1,12 @@
-export type OfferDocumentType =
-  | "offre_technique"
-  | "offre_financiere"
-  | "rccm"
-  | "attestation_fiscale"
-  | "identification_nationale"
-  | "preuve_experience"
-  | "autre";
+export type OfferDocumentType = string;
+
+export interface SubmissionDocumentType {
+  id: number;
+  code: OfferDocumentType;
+  label: string;
+  description?: string | null;
+  display_order: number;
+}
 
 export interface OfferDocument {
   id: number;

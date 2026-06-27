@@ -1,4 +1,4 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, ReactNode, useState } from "react";
 import type { OfferCreate } from "../../types";
 import { CURRENCY_OPTIONS } from "../../utils/formatCurrency";
 import { Button } from "../ui/Button";
@@ -10,11 +10,13 @@ export function OfferForm({
   companyId,
   onSubmit,
   submitting = false,
+  children,
 }: {
   tenderCallId: number;
   companyId: number;
   onSubmit: (payload: OfferCreate) => void | Promise<void>;
   submitting?: boolean;
+  children?: ReactNode;
 }) {
   const [form, setForm] = useState<OfferCreate>({ tender_call_id: tenderCallId, company_id: companyId, montant: 0, devise: "USD" });
   return (
@@ -32,7 +34,10 @@ export function OfferForm({
         <span className="mb-1 block text-sm font-medium text-slate-700">Proposition financiere</span>
         <textarea className="min-h-28 w-full rounded-md border border-slate-300 p-3 text-sm" value={form.proposition_financiere || ""} onChange={(e) => setForm({ ...form, proposition_financiere: e.target.value })} />
       </label>
-      <Button type="submit" disabled={submitting}>{submitting ? "Soumission..." : "Soumettre l'offre"}</Button>
+      {children}
+      <Button type="submit" disabled={submitting}>
+        {submitting ? "Soumission en cours..." : "Soumettre l'offre et les documents"}
+      </Button>
     </form>
   );
 }

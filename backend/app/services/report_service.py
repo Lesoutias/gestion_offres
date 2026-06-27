@@ -22,11 +22,24 @@ from . import offer_scoring_service, tender_call_service
 DOCUMENT_TYPE_LABELS = {
     "offre_technique": "Offre technique",
     "offre_financiere": "Offre financiere",
+    "lettre_soumission": "Lettre de soumission",
+    "autre": "Autre document specifie par l'autorite",
     "rccm": "RCCM",
-    "attestation_fiscale": "Attestation fiscale",
     "identification_nationale": "Identification nationale",
-    "preuve_experience": "Preuve d'experience",
-    "autre": "Autre",
+    "numero_impot": "Numero impot",
+    "attestation_fiscale": "Attestation de regularite fiscale",
+    "attestation_cnss": "Attestation CNSS",
+    "attestation_inpp": "Attestation INPP",
+    "attestation_onem": "Attestation ONEM",
+    "statuts_entreprise": "Statuts de l'entreprise",
+    "pouvoir_signataire": "Pouvoir du signataire",
+    "garantie_soumission": "Garantie de soumission",
+    "attestation_bancaire": "Attestation bancaire",
+    "etats_financiers": "Etats financiers",
+    "preuve_experience": "References de marches similaires",
+    "cv_personnel_cle": "CV du personnel cle",
+    "liste_materiel": "Liste du materiel",
+    "calendrier_execution": "Calendrier d'execution",
 }
 
 RECOMMENDATION_LABELS = {
@@ -69,7 +82,7 @@ def _load_tender_offers(db: Session, tender_call_id: int) -> tuple[TenderCall, D
     offers = (
         db.query(Offer)
         .options(joinedload(Offer.company), joinedload(Offer.documents))
-        .filter(Offer.tender_call_id == tender_call_id)
+        .filter(Offer.tender_call_id == tender_call_id, Offer.statut != "draft")
         .all()
     )
     if offers:
@@ -78,7 +91,7 @@ def _load_tender_offers(db: Session, tender_call_id: int) -> tuple[TenderCall, D
         offers = (
             db.query(Offer)
             .options(joinedload(Offer.company), joinedload(Offer.documents))
-            .filter(Offer.tender_call_id == tender_call_id)
+            .filter(Offer.tender_call_id == tender_call_id, Offer.statut != "draft")
             .all()
         )
     return tender, dao, offers
@@ -254,7 +267,7 @@ def _generate_companies_ranking_content(db: Session, tender_call_id: int) -> tup
                 offer.montant,
             ),
         )
-        rows = [["Rang", "Entreprise", "Montant", "Score tech.", "Score fin.", "Total", "Statut"]]
+        rows = [["Rang", "Entreprise", "Montant", "Tech.", "Fin.", "Commission", "Total", "Statut"]]
         for index, offer in enumerate(ranked, start=1):
             company_name = offer.company.name if offer.company else f"Entreprise #{offer.company_id}"
             rows.append(
@@ -264,17 +277,18 @@ def _generate_companies_ranking_content(db: Session, tender_call_id: int) -> tup
                     _format_amount(offer.montant, offer.devise),
                     f"{offer.score_technique:.2f}" if offer.score_technique is not None else "-",
                     f"{offer.score_financier:.2f}" if offer.score_financier is not None else "-",
+                    f"{offer.score_commission:.2f}" if offer.score_commission is not None else "-",
                     f"{offer.score_total:.2f}" if offer.score_total is not None else "-",
                     offer.statut,
                 ]
             )
-        table = Table(rows, colWidths=[1.2 * cm, 5.2 * cm, 2.8 * cm, 2.2 * cm, 2.2 * cm, 2 * cm, 2.4 * cm])
+        table = Table(rows, colWidths=[1 * cm, 4.2 * cm, 2.5 * cm, 1.6 * cm, 1.6 * cm, 2.2 * cm, 1.7 * cm, 2.2 * cm])
         table.setStyle(_table_style())
         story.append(table)
 
     subtitle = (
         f"Appel d'offres {tender.reference} — {tender.objet}<br/>"
-        f"Classement des entreprises par score total (technique + financier)."
+        f"Classement pondere : technique 40 %, financier 40 %, avis commission 20 %."
     )
     content = _build_pdf("Rapport de classement des entreprises", subtitle, story)
     return content, f"classement-entreprises-{tender.reference}.pdf"
@@ -318,7 +332,7 @@ def _generate_offers_summary_content(db: Session, tender_call_id: int) -> tuple[
                         f"<b>Montant:</b> {_format_amount(offer.montant, offer.devise)}<br/>"
                         f"<b>Statut:</b> {offer.statut}<br/>"
                         f"<b>Scores:</b> technique {offer.score_technique or '-'}, "
-                        f"financier {offer.score_financier or '-'}, total {offer.score_total or '-'}"
+                        f"financier {offer.score_financier or '-'}, commission {offer.score_commission if offer.score_commission is not None else '-'}, total {offer.score_total or '-'}"
                     ),
                     body_style,
                 )
@@ -392,7 +406,8 @@ def _generate_commission_evaluations_content(db: Session, tender_call_id: int) -
                         f"<b>Date:</b> {_format_datetime(evaluation.created_at)}<br/>"
                         f"<b>Recommandation:</b> {_recommendation_label(evaluation.recommendation)}<br/>"
                         f"<b>Scores au moment de l'evaluation:</b> "
-                        f"technique {evaluation.technical_score}, financier {evaluation.financial_score}<br/>"
+                        f"technique {evaluation.technical_score}, financier {evaluation.financial_score}, "
+                        f"commission {evaluation.offer.score_commission if evaluation.offer.score_commission is not None else '-'}<br/>"
                         f"<b>Commentaire:</b> {evaluation.comment or 'Aucun commentaire.'}"
                     ),
                     body_style,
@@ -421,6 +436,7 @@ def _generate_tenders_overview_content(db: Session) -> tuple[bytes, str]:
     tenders = tender_call_service.list_tender_calls(db)
     offer_counts = dict(
         db.query(Offer.tender_call_id, func.count(Offer.id))
+        .filter(Offer.statut != "draft")
         .group_by(Offer.tender_call_id)
         .all()
     )
@@ -428,13 +444,13 @@ def _generate_tenders_overview_content(db: Session) -> tuple[bytes, str]:
     for tender in tenders:
         offers = (
             db.query(Offer)
-            .filter(Offer.tender_call_id == tender.id)
+            .filter(Offer.tender_call_id == tender.id, Offer.statut != "draft")
             .all()
         )
         if offers:
             offer_scoring_service.recalculate_tender_offer_scores(db, tender.id)
             db.expire_all()
-            offers = db.query(Offer).filter(Offer.tender_call_id == tender.id).all()
+            offers = db.query(Offer).filter(Offer.tender_call_id == tender.id, Offer.statut != "draft").all()
         best_score = max((offer.score_total or 0) for offer in offers) if offers else None
         rows.append(
             [

@@ -22,7 +22,7 @@ def submit_offer(data: OfferCreate, db: Session = Depends(get_db), current_user:
     if data.company_id != company.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Entreprise invalide")
     offer = offer_service.submit_offer(db, data, current_user.id)
-    log_action(db, current_user.id, "offer.submit", "Offer", offer.id)
+    log_action(db, current_user.id, "offer.prepare", "Offer", offer.id)
     return offer
 
 
@@ -58,7 +58,11 @@ def validate_offer_documents_route(
     company = company_service.get_my_company(db, current_user.id)
     if offer.company_id != company.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acces refuse")
-    return offer_service.validate_offer_documents(db, offer_id)
+    was_draft = offer.statut == "draft"
+    result = offer_service.validate_offer_documents(db, offer_id)
+    if was_draft:
+        log_action(db, current_user.id, "offer.submit", "Offer", offer.id)
+    return result
 
 
 @router.get("/{offer_id}", response_model=OfferRead)
@@ -69,6 +73,8 @@ def get_offer(offer_id: int, db: Session = Depends(get_db), current_user: User =
         if offer.company_id != company.id:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acces refuse")
         return offer
+    if offer.statut == "draft":
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Offre introuvable")
     require_roles(current_user, [ADMIN, AUTORITE_PUBLIQUE, COMMISSION_EVALUATION])
     return offer
 

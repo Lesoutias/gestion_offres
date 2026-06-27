@@ -1,6 +1,6 @@
 import type { Currency } from "./currency";
 
-export type OfferStatus = "submitted" | "under_review" | "accepted" | "rejected" | "awarded";
+export type OfferStatus = "draft" | "submitted" | "under_review" | "accepted" | "rejected" | "awarded";
 
 export interface Offer {
   id: number;
@@ -15,6 +15,7 @@ export interface Offer {
   statut: OfferStatus;
   score_technique?: number | null;
   score_financier?: number | null;
+  score_commission?: number | null;
   score_total?: number | null;
   date_soumission: string;
   created_at: string;
@@ -35,5 +36,6 @@ export type OfferUpdate = Partial<OfferCreate> & {
   statut?: OfferStatus;
   score_technique?: number;
   score_financier?: number;
+  score_commission?: number;
   score_total?: number;
 };

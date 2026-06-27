@@ -21,6 +21,7 @@ export default function SubmitOfferPage() {
   const [files, setFiles] = useState<Partial<Record<OfferDocumentType, File>>>({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState<string | null>(null);
 
   const requiredTypes = useMemo(
     () => dao.data?.required_document_types ?? [],
@@ -28,6 +29,10 @@ export default function SubmitOfferPage() {
   );
 
   const handleSubmit = async (payload: OfferCreate) => {
+    if (!dao.data || requiredTypes.length === 0) {
+      setError("Cet appel d'offres ne dispose pas d'un DAO avec des documents obligatoires.");
+      return;
+    }
     if (!hasAllRequiredFiles(requiredTypes, files)) {
       setError("Veuillez fournir tous les documents obligatoires du DAO.");
       return;
@@ -35,13 +40,16 @@ export default function SubmitOfferPage() {
     try {
       setSubmitting(true);
       setError(null);
+      setProgress("Creation de l'offre...");
       const offer = await offerService.submit(payload);
-      for (const type of requiredTypes) {
+      for (const [index, type] of requiredTypes.entries()) {
         const file = files[type];
         if (file) {
+          setProgress(`Envoi du document ${index + 1}/${requiredTypes.length}...`);
           await offerDocumentService.upload(offer.id, type, file);
         }
       }
+      setProgress("Verification finale des documents...");
       await offerService.validateDocuments(offer.id);
       navigate("/company/offers");
     } catch (err: unknown) {
@@ -49,6 +57,7 @@ export default function SubmitOfferPage() {
       setError(typeof detail === "string" ? detail : "Soumission impossible");
     } finally {
       setSubmitting(false);
+      setProgress(null);
     }
   };
 
@@ -67,12 +76,14 @@ export default function SubmitOfferPage() {
                     companyId={company.id}
                     onSubmit={handleSubmit}
                     submitting={submitting}
-                  />
-                  <RequiredDocumentsUpload
-                    requiredTypes={requiredTypes}
-                    files={files}
-                    onChange={setFiles}
-                  />
+                  >
+                    <RequiredDocumentsUpload
+                      requiredTypes={requiredTypes}
+                      files={files}
+                      onChange={setFiles}
+                    />
+                    {progress && <p className="text-sm font-medium text-emerald-700">{progress}</p>}
+                  </OfferForm>
                   {error && <p className="text-sm text-red-700">{error}</p>}
                 </div>
               </Card>

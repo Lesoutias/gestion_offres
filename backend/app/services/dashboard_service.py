@@ -35,7 +35,7 @@ def get_admin_stats(db: Session) -> AdminDashboardStats:
         total_tender_calls=db.query(TenderCall).count(),
         published_tender_calls=db.query(TenderCall).filter(TenderCall.statut == "published").count(),
         closed_tender_calls=db.query(TenderCall).filter(TenderCall.statut == "closed").count(),
-        submitted_offers=db.query(Offer).count(),
+        submitted_offers=db.query(Offer).filter(Offer.statut != "draft").count(),
         awarded_public_contracts=db.query(PublicContract).filter(PublicContract.statut.in_(["awarded", "signed", "in_execution", "completed"])).count(),
         signed_contracts=db.query(Contract).filter(Contract.statut == "signed").count(),
         projects_in_execution=db.query(Execution).filter(Execution.statut.in_(["in_progress", "delayed"])).count(),
@@ -53,7 +53,7 @@ def get_authority_stats(db: Session, authority_id: int) -> AuthorityDashboardSta
         published_tender_calls=db.query(TenderCall).filter(TenderCall.authority_id == authority_id, TenderCall.statut == "published").count(),
         evaluation_tender_calls=db.query(TenderCall).filter(TenderCall.authority_id == authority_id, TenderCall.statut == "evaluation").count(),
         awarded_tender_calls=db.query(TenderCall).filter(TenderCall.authority_id == authority_id, TenderCall.statut == "awarded").count(),
-        submitted_offers=db.query(Offer).filter(Offer.tender_call_id.in_(tender_ids)).count() if tender_ids else 0,
+        submitted_offers=db.query(Offer).filter(Offer.tender_call_id.in_(tender_ids), Offer.statut != "draft").count() if tender_ids else 0,
         public_contracts=db.query(PublicContract).filter(PublicContract.authority_id == authority_id).count(),
         signed_contracts=db.query(Contract).join(PublicContract).filter(PublicContract.authority_id == authority_id, Contract.statut == "signed").count(),
         projects_in_execution=db.query(Execution).join(PublicContract).filter(PublicContract.authority_id == authority_id, Execution.statut.in_(["in_progress", "delayed"])).count(),
@@ -65,7 +65,7 @@ def get_authority_stats(db: Session, authority_id: int) -> AuthorityDashboardSta
 
 def get_company_stats(db: Session, company_id: int) -> CompanyDashboardStats:
     return CompanyDashboardStats(
-        submitted_offers=db.query(Offer).filter(Offer.company_id == company_id).count(),
+        submitted_offers=db.query(Offer).filter(Offer.company_id == company_id, Offer.statut != "draft").count(),
         accepted_offers=db.query(Offer).filter(Offer.company_id == company_id, Offer.statut == "accepted").count(),
         rejected_offers=db.query(Offer).filter(Offer.company_id == company_id, Offer.statut == "rejected").count(),
         won_public_contracts=db.query(PublicContract).filter(PublicContract.company_id == company_id).count(),

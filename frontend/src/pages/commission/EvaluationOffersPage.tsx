@@ -42,7 +42,7 @@ export default function EvaluationOffersPage() {
         title="Evaluation des offres"
         description={
           evaluatingSingle
-            ? "Les scores sont calcules automatiquement. Saisissez la conformite et le rapport."
+            ? "Telechargez et verifiez chaque piece, puis saisissez l'avis et le rapport de la commission."
             : "Les entreprises doivent avoir soumis leurs offres avant le lancement de l'evaluation."
         }
       />

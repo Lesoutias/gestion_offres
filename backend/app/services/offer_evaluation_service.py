@@ -30,7 +30,19 @@ def create_offer_evaluation(db: Session, data: OfferEvaluationCreate, evaluator_
     offer = db.query(Offer).filter(Offer.id == data.offer_id).first()
     if not offer:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Offre introuvable")
+    if offer.statut == "draft":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cette offre n'a pas ete soumise")
     _ensure_tender_in_evaluation(db, offer)
+    existing = (
+        db.query(OfferEvaluation)
+        .filter(OfferEvaluation.offer_id == data.offer_id, OfferEvaluation.evaluator_id == evaluator_id)
+        .first()
+    )
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Vous avez deja enregistre un avis pour cette offre",
+        )
     offer_scoring_service.recalculate_tender_offer_scores(db, offer.tender_call_id)
     db.refresh(offer)
     evaluation = OfferEvaluation(
@@ -43,6 +55,8 @@ def create_offer_evaluation(db: Session, data: OfferEvaluationCreate, evaluator_
     )
     db.add(evaluation)
     _apply_evaluation_outcome(offer, data.recommendation)
+    db.flush()
+    offer_scoring_service.recalculate_tender_offer_scores(db, offer.tender_call_id)
     db.commit()
     db.refresh(evaluation)
     return evaluation
@@ -75,12 +89,13 @@ def update_offer_evaluation(db: Session, evaluation_id: int, data: OfferEvaluati
         setattr(evaluation, field, value)
     offer = db.query(Offer).filter(Offer.id == evaluation.offer_id).first()
     if offer:
+        if data.recommendation is not None:
+            _apply_evaluation_outcome(offer, data.recommendation)
+        db.flush()
         offer_scoring_service.recalculate_tender_offer_scores(db, offer.tender_call_id)
         db.refresh(offer)
         evaluation.technical_score = offer.score_technique or 0
         evaluation.financial_score = offer.score_financier or 0
-        if data.recommendation is not None:
-            _apply_evaluation_outcome(offer, data.recommendation)
     db.commit()
     db.refresh(evaluation)
     return evaluation
@@ -90,6 +105,7 @@ def delete_offer_evaluation(db: Session, evaluation_id: int) -> None:
     evaluation = get_offer_evaluation(db, evaluation_id)
     offer_id = evaluation.offer_id
     db.delete(evaluation)
+    db.flush()
     offer = db.query(Offer).filter(Offer.id == offer_id).first()
     if offer:
         offer_scoring_service.recalculate_tender_offer_scores(db, offer.tender_call_id)

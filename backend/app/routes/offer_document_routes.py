@@ -1,11 +1,12 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile, status
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..models.user import User
-from ..schemas.offer_document_schema import OfferDocumentRead, OfferDocumentType
+from ..schemas.offer_document_schema import OfferDocumentRead
 from ..security.permissions import ADMIN, AUTORITE_PUBLIQUE, COMMISSION_EVALUATION, ENTREPRISE, require_roles
 from ..services import company_service, offer_document_service, offer_service
 from ..services.audit_log_service import log_action
@@ -28,13 +29,14 @@ def _ensure_offer_owner_or_reader(db: Session, offer_id: int, current_user: User
 @router.post("/offer/{offer_id}/upload", response_model=OfferDocumentRead)
 async def upload_offer_document(
     offer_id: int,
-    document_type: OfferDocumentType,
+    document_type: str,
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     require_roles(current_user, [ENTREPRISE])
     _ensure_offer_owner_or_reader(db, offer_id, current_user)
+    offer_document_service.ensure_document_can_be_uploaded(db, offer_id, document_type)
     saved = await FileUploadService.save_upload(file, "offers")
     from ..schemas.offer_document_schema import OfferDocumentCreate
 
@@ -50,6 +52,18 @@ async def upload_offer_document(
 def list_offer_documents(offer_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     _ensure_offer_owner_or_reader(db, offer_id, current_user)
     return offer_document_service.list_offer_documents(db, offer_id)
+
+
+@router.get("/{document_id}/download")
+def download_offer_document(
+    document_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    document = offer_document_service.get_offer_document(db, document_id)
+    _ensure_offer_owner_or_reader(db, document.offer_id, current_user)
+    path = FileUploadService.resolve_offer_document(document.file_url)
+    return FileResponse(path=path, media_type=document.file_mime_type, filename=document.file_name)
 
 
 @router.delete("/{document_id}", status_code=status.HTTP_204_NO_CONTENT)

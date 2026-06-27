@@ -3,7 +3,7 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-OfferStatus = Literal["submitted", "under_review", "accepted", "rejected", "awarded"]
+OfferStatus = Literal["draft", "submitted", "under_review", "accepted", "rejected", "awarded"]
 Currency = Literal["CDF", "USD"]
 
 
@@ -30,6 +30,7 @@ class OfferUpdate(BaseModel):
     statut: Optional[OfferStatus] = None
     score_technique: Optional[float] = Field(default=None, ge=0)
     score_financier: Optional[float] = Field(default=None, ge=0)
+    score_commission: Optional[float] = Field(default=None, ge=0, le=100)
     score_total: Optional[float] = Field(default=None, ge=0)
 
 
@@ -43,6 +44,7 @@ class OfferRead(OfferBase):
     statut: OfferStatus
     score_technique: Optional[float] = None
     score_financier: Optional[float] = None
+    score_commission: Optional[float] = None
     score_total: Optional[float] = None
     date_soumission: datetime
     created_at: datetime

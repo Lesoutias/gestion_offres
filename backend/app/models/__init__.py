@@ -14,3 +14,4 @@ from .execution import Execution
 from .execution_report import ExecutionReport
 from .audit_log import AuditLog
 from .report_export import ReportExport
+from .submission_document_type import SubmissionDocumentType

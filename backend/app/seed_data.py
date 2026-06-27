@@ -5,8 +5,33 @@ from .models.company import Company
 from .models.permission import Permission
 from .models.public_authority import PublicAuthority
 from .models.role import Role
+from .models.submission_document_type import SubmissionDocumentType
 from .models.user import User
 from .security.password import hash_password
+
+
+SUBMISSION_DOCUMENT_TYPES = [
+    ("offre_technique", "Offre technique", "Proposition technique detaillee du soumissionnaire."),
+    ("offre_financiere", "Offre financiere", "Bordereau des prix et montant total de l'offre."),
+    ("lettre_soumission", "Lettre de soumission", "Lettre signee confirmant l'engagement du soumissionnaire."),
+    ("autre", "Autre document specifie par l'autorite", "Piece complementaire precisee dans les conditions du DAO."),
+    ("rccm", "Registre du commerce (RCCM)", "Copie du Registre du commerce et du credit mobilier."),
+    ("identification_nationale", "Identification nationale", "Copie du certificat d'identification nationale."),
+    ("numero_impot", "Numero impot", "Attestation ou certificat portant le numero impot."),
+    ("attestation_fiscale", "Attestation de regularite fiscale", "Attestation fiscale valide a la date de soumission."),
+    ("attestation_cnss", "Attestation CNSS", "Attestation de regularite des cotisations sociales."),
+    ("attestation_inpp", "Attestation INPP", "Attestation de regularite aupres de l'INPP."),
+    ("attestation_onem", "Attestation ONEM", "Attestation de regularite aupres de l'ONEM."),
+    ("statuts_entreprise", "Statuts de l'entreprise", "Copie des statuts juridiques en vigueur."),
+    ("pouvoir_signataire", "Pouvoir du signataire", "Mandat ou procuration autorisant la signature de l'offre."),
+    ("garantie_soumission", "Garantie de soumission", "Garantie bancaire ou caution de soumission exigee."),
+    ("attestation_bancaire", "Attestation bancaire", "Attestation de solvabilite ou de capacite bancaire."),
+    ("etats_financiers", "Etats financiers", "Etats financiers certifies des exercices demandes."),
+    ("preuve_experience", "References de marches similaires", "Preuves de contrats ou prestations similaires executes."),
+    ("cv_personnel_cle", "CV du personnel cle", "Curriculum vitae et qualifications du personnel propose."),
+    ("liste_materiel", "Liste du materiel", "Liste des equipements et moyens techniques disponibles."),
+    ("calendrier_execution", "Calendrier d'execution", "Planning detaille de realisation des prestations."),
+]
 
 
 PERMISSIONS = [
@@ -132,6 +157,18 @@ def get_or_create_permission(db: Session, name: str) -> Permission:
     return permission
 
 
+def seed_submission_document_types(db: Session) -> None:
+    for display_order, (code, label, description) in enumerate(SUBMISSION_DOCUMENT_TYPES, start=1):
+        document_type = db.query(SubmissionDocumentType).filter(SubmissionDocumentType.code == code).first()
+        if not document_type:
+            document_type = SubmissionDocumentType(code=code)
+            db.add(document_type)
+        document_type.label = label
+        document_type.description = description
+        document_type.display_order = display_order
+        document_type.is_active = True
+
+
 def get_or_create_user(db: Session, email: str, full_name: str, password: str, role: Role) -> User:
     user = db.query(User).filter(User.email == email).first()
     if user:
@@ -196,6 +233,7 @@ def get_or_create_company(db: Session, user: User, name: str) -> Company:
 def seed_database(verbose: bool = True) -> None:
     db = SessionLocal()
     try:
+        seed_submission_document_types(db)
         permissions = {name: get_or_create_permission(db, name) for name in PERMISSIONS}
 
         roles = {}

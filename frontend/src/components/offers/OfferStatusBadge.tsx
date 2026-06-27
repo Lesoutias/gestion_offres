@@ -2,6 +2,7 @@ import type { OfferStatus } from "../../types";
 import { Badge } from "../ui/Badge";
 
 const labels: Record<OfferStatus, string> = {
+  draft: "Brouillon incomplet",
   submitted: "Soumise",
   under_review: "En analyse",
   accepted: "Conforme",

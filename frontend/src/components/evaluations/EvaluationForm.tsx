@@ -51,6 +51,9 @@ export function EvaluationForm({
           { label: "Conforme avec reserves", value: "reserve" },
         ]}
       />
+      <p className="text-xs text-slate-500">
+        Impact sur le score : favorable = 100, avec reserves = 50, defavorable = 0. L'avis compte pour 20 % du total.
+      </p>
       <label className="block">
         <span className="mb-1 block text-sm font-medium text-slate-700">Rapport / commentaire</span>
         <textarea className="min-h-24 w-full rounded-md border border-slate-300 p-3 text-sm" value={form.comment || ""} onChange={(e) => setForm({ ...form, comment: e.target.value })} />

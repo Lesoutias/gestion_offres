@@ -29,13 +29,26 @@ def submit_offer(db: Session, data: OfferCreate, submitted_by_id: int) -> Offer:
     if _ensure_comparable(tender.date_limite) <= _now():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Date limite de soumission depassee")
 
+    dao = db.query(DaoDocument).filter(DaoDocument.tender_call_id == data.tender_call_id).first()
+    if not dao or not dao.required_document_types:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Le DAO ne definit aucun document obligatoire pour cet appel d'offres",
+        )
+
     duplicate = (
         db.query(Offer)
         .filter(Offer.tender_call_id == data.tender_call_id, Offer.company_id == data.company_id)
         .first()
     )
     if duplicate:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Une offre existe deja pour cet appel d'offres")
+        if duplicate.statut != "draft":
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Une offre existe deja pour cet appel d'offres")
+        for field, value in data.model_dump().items():
+            setattr(duplicate, field, value)
+        db.commit()
+        db.refresh(duplicate)
+        return duplicate
 
     offer = Offer(**data.model_dump(), submitted_by_id=submitted_by_id)
     db.add(offer)
@@ -49,11 +62,16 @@ def list_my_offers(db: Session, company_id: int) -> list[Offer]:
 
 
 def list_offers_by_tender(db: Session, tender_call_id: int) -> list[Offer]:
-    return db.query(Offer).filter(Offer.tender_call_id == tender_call_id).order_by(Offer.created_at.desc()).all()
+    return (
+        db.query(Offer)
+        .filter(Offer.tender_call_id == tender_call_id, Offer.statut != "draft")
+        .order_by(Offer.created_at.desc())
+        .all()
+    )
 
 
 def list_all_offers(db: Session) -> list[Offer]:
-    return db.query(Offer).order_by(Offer.created_at.desc()).all()
+    return db.query(Offer).filter(Offer.statut != "draft").order_by(Offer.created_at.desc()).all()
 
 
 def get_offer(db: Session, offer_id: int) -> Offer:
@@ -91,6 +109,14 @@ def validate_offer_documents(db: Session, offer_id: int) -> dict:
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Documents manquants: {missing}",
         )
+    offer = get_offer(db, offer_id)
+    if offer.statut == "draft":
+        tender = offer.tender_call
+        if tender.statut != "published" or _ensure_comparable(tender.date_limite) <= _now():
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Les soumissions sont fermees")
+        offer.statut = "submitted"
+        offer.date_soumission = _now()
+        db.commit()
     return result
 
 

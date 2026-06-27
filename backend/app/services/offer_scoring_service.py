@@ -1,7 +1,15 @@
 from sqlalchemy.orm import Session
 
 from ..models.offer import Offer
+from ..models.offer_evaluation import OfferEvaluation
 from ..services import offer_service
+
+
+COMMISSION_RECOMMENDATION_SCORES = {
+    "favorable": 100.0,
+    "reserve": 50.0,
+    "unfavorable": 0.0,
+}
 
 
 def compute_technical_score(db: Session, offer_id: int) -> float:
@@ -17,7 +25,7 @@ def compute_technical_score(db: Session, offer_id: int) -> float:
 def compute_financial_scores_for_tender(db: Session, tender_call_id: int) -> dict[int, float]:
     offers = (
         db.query(Offer)
-        .filter(Offer.tender_call_id == tender_call_id)
+        .filter(Offer.tender_call_id == tender_call_id, Offer.statut != "draft")
         .all()
     )
     scores: dict[int, float] = {}
@@ -44,11 +52,30 @@ def compute_financial_scores_for_tender(db: Session, tender_call_id: int) -> dic
     return scores
 
 
+def compute_commission_score(db: Session, offer_id: int) -> float | None:
+    recommendations = [
+        row[0]
+        for row in db.query(OfferEvaluation.recommendation)
+        .filter(OfferEvaluation.offer_id == offer_id)
+        .all()
+    ]
+    if not recommendations:
+        return None
+    scores = [COMMISSION_RECOMMENDATION_SCORES[value] for value in recommendations]
+    return round(sum(scores) / len(scores), 2)
+
+
 def recalculate_tender_offer_scores(db: Session, tender_call_id: int) -> None:
     financial_scores = compute_financial_scores_for_tender(db, tender_call_id)
-    offers = db.query(Offer).filter(Offer.tender_call_id == tender_call_id).all()
+    offers = db.query(Offer).filter(Offer.tender_call_id == tender_call_id, Offer.statut != "draft").all()
     for offer in offers:
         offer.score_technique = compute_technical_score(db, offer.id)
         offer.score_financier = financial_scores.get(offer.id, 0.0)
-        offer.score_total = round((offer.score_technique or 0) + (offer.score_financier or 0), 2)
+        offer.score_commission = compute_commission_score(db, offer.id)
+        offer.score_total = round(
+            (offer.score_technique or 0) * 0.40
+            + (offer.score_financier or 0) * 0.40
+            + (offer.score_commission or 0) * 0.20,
+            2,
+        )
     db.flush()

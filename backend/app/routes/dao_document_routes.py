@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models.user import User
 from ..schemas.dao_document_schema import DaoDocumentCreate, DaoDocumentRead, DaoDocumentUpdate
+from ..schemas.offer_document_schema import SubmissionDocumentTypeRead
 from ..security.permissions import ADMIN, AUTORITE_PUBLIQUE, COMMISSION_EVALUATION, ENTREPRISE, require_roles
 from ..services import dao_document_service, tender_call_service
 from ..services.audit_log_service import log_action
@@ -11,6 +12,11 @@ from ..services.file_upload_service import FileUploadService
 from .auth_routes import get_current_user, get_current_user_optional
 
 router = APIRouter()
+
+
+@router.get("/available-document-types", response_model=list[SubmissionDocumentTypeRead])
+def list_available_document_types(db: Session = Depends(get_db)):
+    return dao_document_service.list_submission_document_types(db)
 
 
 @router.post("", response_model=DaoDocumentRead)
